@@ -1121,6 +1121,15 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       onValue(stateRef, function (snapshot) {
         var incoming = snapshot.val();
         if (!incoming) { set(stateRef, state); return; } // first person ever — seed the shared copy
+        // Firebase echoes our own writes back to us too. If this is just
+        // that echo, applyRemoteState must NOT run — it clears the undo
+        // stack on the assumption a collaborator changed something, which
+        // isn't true here and was wiping undo within about a second of
+        // every single edit.
+        if (JSON.stringify(incoming) === lastPushedJson) {
+          setSyncStatus("synced", "Synced with collaborators");
+          return;
+        }
         applyRemoteState(incoming);
         setSyncStatus("synced", "Synced with collaborators");
       }, function (err) {
@@ -1133,12 +1142,16 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     }
   }
 
+  var lastPushedJson = null;
+
   function persist() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     if (!stateRef) return;
     setSyncStatus("pending", "Syncing…");
     clearTimeout(pushTimer);
     pushTimer = setTimeout(function () {
+      var payloadJson = JSON.stringify(state);
+      lastPushedJson = payloadJson;
       set(stateRef, state).then(function () {
         setSyncStatus("synced", "Synced with collaborators");
       }).catch(function (err) {
@@ -1341,7 +1354,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     state.themes.forEach(function (theme) {
       var hue = HUES[theme.colorFamily] || 210;
       var lectures = state.lectures.filter(function (l) { return l.themeId === theme.id; });
-      var collapsed = collapsedThemes[theme.id] ? " collapsed" : "";
+      var collapsed = collapsedThemes[theme.id] === false ? "" : " collapsed"; // collapsed by default
       html += '<div class="theme-group' + collapsed + '" style="--h:' + hue + '" data-theme-id="' + attr(theme.id) + '">';
       html += '<div class="theme-group-head" data-role="toggle">';
       html += '<span class="chevron">▾</span><span class="theme-swatch' + (theme.colorFamily === "Gray" ? " theme-swatch-gray" : "") + '"></span>';
@@ -1445,7 +1458,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   function revealInSpines(lectureId) {
     var lecture = lectureById(lectureId);
     if (!lecture) return;
-    if (collapsedThemes[lecture.themeId]) {
+    if (collapsedThemes[lecture.themeId] !== false) {
       collapsedThemes[lecture.themeId] = false;
       renderSpines();
     }
@@ -1586,7 +1599,8 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     var head = e.target.closest(".theme-group-head");
     if (head && !e.target.closest("input") && !e.target.closest("button")) {
       var themeId = head.closest(".theme-group").getAttribute("data-theme-id");
-      collapsedThemes[themeId] = !collapsedThemes[themeId];
+      var wasCollapsed = collapsedThemes[themeId] !== false;
+      collapsedThemes[themeId] = wasCollapsed ? false : true;
       renderSpines();
       return;
     }
