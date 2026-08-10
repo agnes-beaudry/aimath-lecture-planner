@@ -382,6 +382,20 @@
     border-radius: 4px;
   }
   .theme-group-head input.theme-name:focus { background: var(--paper-raised); outline: 1px solid var(--rule-strong); }
+  .theme-group-head input.theme-tag-input {
+    width: 30px;
+    flex: 0 0 auto;
+    background: var(--paper-raised);
+    border: 1px solid hsl(var(--h) var(--chip-s) var(--chip-l-border));
+    font-weight: 600;
+    font-size: 11px;
+    text-align: center;
+    text-transform: uppercase;
+    color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
+    padding: 2px 2px;
+    border-radius: 4px;
+  }
+  .theme-group-head input.theme-tag-input:focus { outline: 1px solid var(--rule-strong); }
   .theme-group-head .count {
     font-size: 11px;
     color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
@@ -462,6 +476,16 @@
     resize: none;
     overflow: hidden;
     min-height: 18px;
+  }
+  .spine-select {
+    width: 100%;
+    border: 1px solid var(--rule);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-size: 11.5px;
+    padding: 4px 5px;
+    border-radius: 5px;
+    margin: 1px 0 2px;
   }
   .spine-row-bottom {
     display: flex;
@@ -935,6 +959,8 @@
         <li>Click into any title or description to edit — saves and syncs automatically.</li>
         <li><strong>Prep notes</strong> is for what needs to be ready beforehand.</li>
         <li><strong>Presenter</strong> assigns who's teaching it — click a name to assign, click again to unassign.</li>
+        <li><strong>Format</strong> (Lecture/Workshop/Seminar/…) and <strong>Theme</strong> (which category it lives in) are both dropdowns on each lecture — changing Theme moves it to a different spine.</li>
+        <li>The small box next to a theme's name is its <strong>tag prefix</strong> (e.g. "T"). Each lecture's tag — shown on its card — is that prefix plus a number set automatically by calendar order, so it always stays in sequence.</li>
         <li><strong>+ Add lecture</strong> / 🗑 add or remove lectures; <strong>+ Add theme</strong> creates a new theme with its own color.</li>
       </ul>
     </div>
@@ -1021,13 +1047,14 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   "use strict";
 
   /* ============================== SEED DATA ============================== */
-  var SEED = {"themes":[{"id":"theory-of-lms","name":"Theory of LMs","colorFamily":"Blue"},{"id":"ai-assisted-research","name":"AI-assisted Research","colorFamily":"Purple"},{"id":"formalization","name":"Formalization","colorFamily":"Green"},{"id":"ethics","name":"Ethics","colorFamily":"Gold"},{"id":"seminar","name":"Seminar","colorFamily":"Rose"}],"lectures":[{"id":"LM1","themeId":"theory-of-lms","title":"LM Lecture 1 + Project Step 1: language models as probability distributions; bigram counting model","description":"Build the bigram counting model; sample from it and compute perplexity.","format":"Lecture","standalone":false,"assignedDate":"2026-08-31","status":"Tentative"},{"id":"LM2","themeId":"theory-of-lms","title":"LM Lecture 2 + Project Step 2: neural networks and approximation; parametrized bigram + hand gradient","description":"Rebuild the bigram as softmax of a linear map; derive the gradient by hand and train it.","format":"Lecture","standalone":false,"assignedDate":"2026-09-09","status":"Tentative"},{"id":"LM3","themeId":"theory-of-lms","title":"LM Lecture 3 + Project Step 3: backpropagation and stochastic optimization; build autodiff + MLP","description":"Build reverse-mode autodiff; validate it; then train an n-gram MLP with embeddings.","format":"Lecture","standalone":false,"assignedDate":"2026-09-16","status":"Tentative"},{"id":"S09","themeId":"theory-of-lms","title":"LM catch-up / use the current model in a small experiment","description":"No new LM step.","format":"Workshop","standalone":false,"assignedDate":"2026-09-23","status":"Tentative"},{"id":"LM4","themeId":"theory-of-lms","title":"LM Lecture 4 + Project Step 4: attention; implement a causal self-attention head","description":"Implement causal self-attention and visualize attention matrices on real text.","format":"Lecture","standalone":false,"assignedDate":"2026-10-07","status":"Tentative"},{"id":"LM5","themeId":"theory-of-lms","title":"LM Lecture 5 + Project Step 5: the transformer; assemble a complete GPT","description":"Assemble the full transformer/GPT; stack attention and MLP blocks and check parameter counts.","format":"Lecture","standalone":false,"assignedDate":"2026-10-14","status":"Tentative"},{"id":"LM6","themeId":"theory-of-lms","title":"LM Lecture 6 + Project Step 6: training dynamics; train the GPT","description":"Train the GPT on Shakespeare; study loss curves, train/validation behavior, and hyperparameters.","format":"Lecture","standalone":false,"assignedDate":"2026-10-28","status":"Tentative"},{"id":"LM7","themeId":"theory-of-lms","title":"LM Lecture 7 + Project Step 7: tokenization, sampling, and scaling laws","description":"Build a BPE tokenizer and sampler; study temperature/top-k/nucleus sampling and scaling.","format":"Lecture","standalone":false,"assignedDate":"2026-11-04","status":"Tentative"},{"id":"LM8","themeId":"theory-of-lms","title":"LM Lecture 8 + Project Step 8: beyond next-token prediction; capstone","description":"Capstone: scale up, fine-tune, or investigate induction heads; prepare a short showcase.","format":"Lecture","standalone":false,"assignedDate":"2026-11-11","status":"Tentative"},{"id":"S24","themeId":"theory-of-lms","title":"LM capstone showcases + whole-course synthesis","description":"Dec 4 follows a Monday class schedule.","format":"Presentation","standalone":false,"assignedDate":"2026-12-04","status":"Tentative"},{"id":"S02","themeId":"ai-assisted-research","title":"Vibe learning + coding I","description":"Early practical use of AI.","format":"Workshop","standalone":false,"assignedDate":"2026-08-24","status":"Tentative"},{"id":"S03","themeId":"ai-assisted-research","title":"Continue vibe workshop; produce something shareable","description":"Second half of opening workshop.","format":"Workshop","standalone":false,"assignedDate":"2026-08-26","status":"Tentative"},{"id":"S05","themeId":"ai-assisted-research","title":"Show-and-tell; play with and critique first products","description":"Discuss early vibe-coding products.","format":"Workshop","standalone":false,"assignedDate":"2026-09-02","status":"Tentative"},{"id":"S07","themeId":"ai-assisted-research","title":"AI-assisted coding & mathematical experimentation","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-09-14","status":"Tentative"},{"id":"S08","themeId":"ai-assisted-research","title":"AI-assisted research workshop / project skill-building","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-09-21","status":"Tentative"},{"id":"S10","themeId":"ai-assisted-research","title":"From chat to systems: tools, agents, harnesses","description":"Conceptual first encounter with harnesses.","format":"Lecture","standalone":false,"assignedDate":"2026-09-28","status":"Tentative"},{"id":"S11","themeId":"ai-assisted-research","title":"Workflow & evaluation workshop","description":"No new LM step.","format":"Workshop","standalone":false,"assignedDate":"2026-09-30","status":"Tentative"},{"id":"S12","themeId":"ai-assisted-research","title":"Vibeproofing; research examples; launch group projects","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-10-05","status":"Tentative"},{"id":"S18","themeId":"ai-assisted-research","title":"Using formalization in AI-assisted mathematical research","description":"Project/research meeting on bringing formalization and verification into an AI-assisted research workflow.","format":"Project studio","standalone":false,"assignedDate":"2026-11-09","status":"Tentative"},{"id":"S19","themeId":"ai-assisted-research","title":"Build/use a harness or evaluation workflow","description":"Practical second harness encounter.","format":"Workshop","standalone":false,"assignedDate":"2026-11-16","status":"Tentative"},{"id":"S20","themeId":"ai-assisted-research","title":"Project studio: adversarial checking, verification, reproducibility","description":"","format":"Project studio","standalone":false,"assignedDate":"2026-11-18","status":"Tentative"},{"id":"S22","themeId":"ai-assisted-research","title":"Group research presentations I","description":"","format":"Presentation","standalone":false,"assignedDate":"2026-11-30","status":"Tentative"},{"id":"S23","themeId":"ai-assisted-research","title":"Group research presentations II","description":"","format":"Presentation","standalone":false,"assignedDate":"2026-12-02","status":"Tentative"},{"id":"S13","themeId":"formalization","title":"Formalization introduction","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-12","status":"Tentative"},{"id":"S14","themeId":"formalization","title":"Formalization I","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-19","status":"Tentative"},{"id":"S15","themeId":"formalization","title":"Formalization / research-project studio","description":"No new LM step.","format":"Project studio","standalone":false,"assignedDate":"2026-10-21","status":"Tentative"},{"id":"S16","themeId":"formalization","title":"Formalization II: proof search, automation, verification","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-26","status":"Tentative"},{"id":"S17","themeId":"formalization","title":"Formalization III: AI-assisted formalization","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-11-02","status":"Tentative"},{"id":"S06","themeId":"ethics","title":"Ethics I: human, environmental, access, and training-data questions","description":"Dedicated early ethics discussion.","format":"Seminar","standalone":true,"assignedDate":"2026-09-04","status":"Tentative"},{"id":"S21","themeId":"ethics","title":"Ethics II: responsible scientific practice in AI-assisted mathematics","description":"Disclosure, attribution, reproducibility, responsibility.","format":"Seminar","standalone":true,"assignedDate":"2026-11-20","status":"Tentative"},{"id":"S01","themeId":"seminar","title":"Landscape of AI for Mathematical Research","description":"Opening departmental-facing overview.","format":"Seminar","standalone":true,"assignedDate":"2026-08-21","status":"Tentative"},{"id":"S04","themeId":"seminar","title":"Overview of AI architecture / ecosystem","description":"Standalone Friday overview.","format":"Seminar","standalone":true,"assignedDate":"2026-08-28","status":"Tentative"},{"id":"F01","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-11","status":"Tentative"},{"id":"F02","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-18","status":"Tentative"},{"id":"F03","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-25","status":"Tentative"},{"id":"F04","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-02","status":"Tentative"},{"id":"F05","themeId":"seminar","title":"AI-assisted research / vibeproofing case-study speaker","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-09","status":"Tentative"},{"id":"F06","themeId":"seminar","title":"Formalization speaker","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-16","status":"Tentative"},{"id":"F07","themeId":"seminar","title":"Formalization / automated theorem proving seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-23","status":"Tentative"},{"id":"F08","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-30","status":"Tentative"},{"id":"F09","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-11-06","status":"Tentative"},{"id":"F10","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-11-13","status":"Tentative"}],"slots":[{"date":"2026-08-21","day":"Fri","week":"Week 0","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-24","day":"Mon","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-26","day":"Wed","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-28","day":"Fri","week":"Week 1","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-31","day":"Mon","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-02","day":"Wed","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-04","day":"Fri","week":"Week 2","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-07","day":"Mon","week":"Week 3","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Labor Day \u2014 no class"},{"date":"2026-09-09","day":"Wed","week":"Week 3","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-11","day":"Fri","week":"Week 3","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-14","day":"Mon","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-16","day":"Wed","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-18","day":"Fri","week":"Week 4","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-21","day":"Mon","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-23","day":"Wed","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-25","day":"Fri","week":"Week 5","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-28","day":"Mon","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-30","day":"Wed","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-02","day":"Fri","week":"Week 6","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-05","day":"Mon","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-07","day":"Wed","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-09","day":"Fri","week":"Week 7","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-12","day":"Mon","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-14","day":"Wed","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-16","day":"Fri","week":"Week 8","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-19","day":"Mon","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-21","day":"Wed","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-23","day":"Fri","week":"Week 9","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-26","day":"Mon","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-28","day":"Wed","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-30","day":"Fri","week":"Week 10","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-02","day":"Mon","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-04","day":"Wed","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-06","day":"Fri","week":"Week 11","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-09","day":"Mon","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-11","day":"Wed","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-13","day":"Fri","week":"Week 12","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-16","day":"Mon","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-18","day":"Wed","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-20","day":"Fri","week":"Week 13","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-23","day":"Mon","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-25","day":"Wed","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-27","day":"Fri","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Thanksgiving closure \u2014 no class"},{"date":"2026-11-30","day":"Mon","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-02","day":"Wed","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-04","day":"Fri","week":"Week 15","slotType":"Monday schedule","standaloneRequired":false,"assignable":true,"note":"Friday follows a Monday class schedule"}]};
+  var SEED = {"themes":[{"id":"theory-of-lms","name":"Theory of LMs","colorFamily":"Blue","tagPrefix":"T"},{"id":"ai-assisted-research","name":"AI-assisted Research","colorFamily":"Purple","tagPrefix":"R"},{"id":"formalization","name":"Formalization","colorFamily":"Green","tagPrefix":"F"},{"id":"ethics","name":"Ethics","colorFamily":"Gold","tagPrefix":"E"},{"id":"seminar","name":"Seminar","colorFamily":"Rose","tagPrefix":"S"}],"lectures":[{"id":"LM1","themeId":"theory-of-lms","title":"LM Lecture 1 + Project Step 1: language models as probability distributions; bigram counting model","description":"Build the bigram counting model; sample from it and compute perplexity.","format":"Lecture","standalone":false,"assignedDate":"2026-08-31","status":"Tentative"},{"id":"LM2","themeId":"theory-of-lms","title":"LM Lecture 2 + Project Step 2: neural networks and approximation; parametrized bigram + hand gradient","description":"Rebuild the bigram as softmax of a linear map; derive the gradient by hand and train it.","format":"Lecture","standalone":false,"assignedDate":"2026-09-09","status":"Tentative"},{"id":"LM3","themeId":"theory-of-lms","title":"LM Lecture 3 + Project Step 3: backpropagation and stochastic optimization; build autodiff + MLP","description":"Build reverse-mode autodiff; validate it; then train an n-gram MLP with embeddings.","format":"Lecture","standalone":false,"assignedDate":"2026-09-16","status":"Tentative"},{"id":"S09","themeId":"theory-of-lms","title":"LM catch-up / use the current model in a small experiment","description":"No new LM step.","format":"Workshop","standalone":false,"assignedDate":"2026-09-23","status":"Tentative"},{"id":"LM4","themeId":"theory-of-lms","title":"LM Lecture 4 + Project Step 4: attention; implement a causal self-attention head","description":"Implement causal self-attention and visualize attention matrices on real text.","format":"Lecture","standalone":false,"assignedDate":"2026-10-07","status":"Tentative"},{"id":"LM5","themeId":"theory-of-lms","title":"LM Lecture 5 + Project Step 5: the transformer; assemble a complete GPT","description":"Assemble the full transformer/GPT; stack attention and MLP blocks and check parameter counts.","format":"Lecture","standalone":false,"assignedDate":"2026-10-14","status":"Tentative"},{"id":"LM6","themeId":"theory-of-lms","title":"LM Lecture 6 + Project Step 6: training dynamics; train the GPT","description":"Train the GPT on Shakespeare; study loss curves, train/validation behavior, and hyperparameters.","format":"Lecture","standalone":false,"assignedDate":"2026-10-28","status":"Tentative"},{"id":"LM7","themeId":"theory-of-lms","title":"LM Lecture 7 + Project Step 7: tokenization, sampling, and scaling laws","description":"Build a BPE tokenizer and sampler; study temperature/top-k/nucleus sampling and scaling.","format":"Lecture","standalone":false,"assignedDate":"2026-11-04","status":"Tentative"},{"id":"LM8","themeId":"theory-of-lms","title":"LM Lecture 8 + Project Step 8: beyond next-token prediction; capstone","description":"Capstone: scale up, fine-tune, or investigate induction heads; prepare a short showcase.","format":"Lecture","standalone":false,"assignedDate":"2026-11-11","status":"Tentative"},{"id":"S24","themeId":"theory-of-lms","title":"LM capstone showcases + whole-course synthesis","description":"Dec 4 follows a Monday class schedule.","format":"Presentation","standalone":false,"assignedDate":"2026-12-04","status":"Tentative"},{"id":"S02","themeId":"ai-assisted-research","title":"Vibe learning + coding I","description":"Early practical use of AI.","format":"Workshop","standalone":false,"assignedDate":"2026-08-24","status":"Tentative"},{"id":"S03","themeId":"ai-assisted-research","title":"Continue vibe workshop; produce something shareable","description":"Second half of opening workshop.","format":"Workshop","standalone":false,"assignedDate":"2026-08-26","status":"Tentative"},{"id":"S05","themeId":"ai-assisted-research","title":"Show-and-tell; play with and critique first products","description":"Discuss early vibe-coding products.","format":"Workshop","standalone":false,"assignedDate":"2026-09-02","status":"Tentative"},{"id":"S07","themeId":"ai-assisted-research","title":"AI-assisted coding & mathematical experimentation","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-09-14","status":"Tentative"},{"id":"S08","themeId":"ai-assisted-research","title":"AI-assisted research workshop / project skill-building","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-09-21","status":"Tentative"},{"id":"S10","themeId":"ai-assisted-research","title":"From chat to systems: tools, agents, harnesses","description":"Conceptual first encounter with harnesses.","format":"Lecture","standalone":false,"assignedDate":"2026-09-28","status":"Tentative"},{"id":"S11","themeId":"ai-assisted-research","title":"Workflow & evaluation workshop","description":"No new LM step.","format":"Workshop","standalone":false,"assignedDate":"2026-09-30","status":"Tentative"},{"id":"S12","themeId":"ai-assisted-research","title":"Vibeproofing; research examples; launch group projects","description":"","format":"Workshop","standalone":false,"assignedDate":"2026-10-05","status":"Tentative"},{"id":"S18","themeId":"ai-assisted-research","title":"Using formalization in AI-assisted mathematical research","description":"Project/research meeting on bringing formalization and verification into an AI-assisted research workflow.","format":"Project studio","standalone":false,"assignedDate":"2026-11-09","status":"Tentative"},{"id":"S19","themeId":"ai-assisted-research","title":"Build/use a harness or evaluation workflow","description":"Practical second harness encounter.","format":"Workshop","standalone":false,"assignedDate":"2026-11-16","status":"Tentative"},{"id":"S20","themeId":"ai-assisted-research","title":"Project studio: adversarial checking, verification, reproducibility","description":"","format":"Project studio","standalone":false,"assignedDate":"2026-11-18","status":"Tentative"},{"id":"S22","themeId":"ai-assisted-research","title":"Group research presentations I","description":"","format":"Presentation","standalone":false,"assignedDate":"2026-11-30","status":"Tentative"},{"id":"S23","themeId":"ai-assisted-research","title":"Group research presentations II","description":"","format":"Presentation","standalone":false,"assignedDate":"2026-12-02","status":"Tentative"},{"id":"S13","themeId":"formalization","title":"Formalization introduction","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-12","status":"Tentative"},{"id":"S14","themeId":"formalization","title":"Formalization I","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-19","status":"Tentative"},{"id":"S15","themeId":"formalization","title":"Formalization / research-project studio","description":"No new LM step.","format":"Project studio","standalone":false,"assignedDate":"2026-10-21","status":"Tentative"},{"id":"S16","themeId":"formalization","title":"Formalization II: proof search, automation, verification","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-10-26","status":"Tentative"},{"id":"S17","themeId":"formalization","title":"Formalization III: AI-assisted formalization","description":"","format":"Lecture","standalone":false,"assignedDate":"2026-11-02","status":"Tentative"},{"id":"S06","themeId":"ethics","title":"Ethics I: human, environmental, access, and training-data questions","description":"Dedicated early ethics discussion.","format":"Seminar","standalone":true,"assignedDate":"2026-09-04","status":"Tentative"},{"id":"S21","themeId":"ethics","title":"Ethics II: responsible scientific practice in AI-assisted mathematics","description":"Disclosure, attribution, reproducibility, responsibility.","format":"Seminar","standalone":true,"assignedDate":"2026-11-20","status":"Tentative"},{"id":"S01","themeId":"seminar","title":"Landscape of AI for Mathematical Research","description":"Opening departmental-facing overview.","format":"Seminar","standalone":true,"assignedDate":"2026-08-21","status":"Tentative"},{"id":"S04","themeId":"seminar","title":"Overview of AI architecture / ecosystem","description":"Standalone Friday overview.","format":"Seminar","standalone":true,"assignedDate":"2026-08-28","status":"Tentative"},{"id":"F01","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-11","status":"Tentative"},{"id":"F02","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-18","status":"Tentative"},{"id":"F03","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-09-25","status":"Tentative"},{"id":"F04","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-02","status":"Tentative"},{"id":"F05","themeId":"seminar","title":"AI-assisted research / vibeproofing case-study speaker","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-09","status":"Tentative"},{"id":"F06","themeId":"seminar","title":"Formalization speaker","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-16","status":"Tentative"},{"id":"F07","themeId":"seminar","title":"Formalization / automated theorem proving seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-23","status":"Tentative"},{"id":"F08","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-10-30","status":"Tentative"},{"id":"F09","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-11-06","status":"Tentative"},{"id":"F10","themeId":"seminar","title":"Outside / departmental seminar \u2014 TBD","description":"","format":"Seminar","standalone":true,"assignedDate":"2026-11-13","status":"Tentative"}],"slots":[{"date":"2026-08-21","day":"Fri","week":"Week 0","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-24","day":"Mon","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-26","day":"Wed","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-28","day":"Fri","week":"Week 1","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-31","day":"Mon","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-02","day":"Wed","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-04","day":"Fri","week":"Week 2","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-07","day":"Mon","week":"Week 3","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Labor Day \u2014 no class"},{"date":"2026-09-09","day":"Wed","week":"Week 3","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-11","day":"Fri","week":"Week 3","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-14","day":"Mon","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-16","day":"Wed","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-18","day":"Fri","week":"Week 4","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-21","day":"Mon","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-23","day":"Wed","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-25","day":"Fri","week":"Week 5","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-28","day":"Mon","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-30","day":"Wed","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-02","day":"Fri","week":"Week 6","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-05","day":"Mon","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-07","day":"Wed","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-09","day":"Fri","week":"Week 7","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-12","day":"Mon","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-14","day":"Wed","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-16","day":"Fri","week":"Week 8","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-19","day":"Mon","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-21","day":"Wed","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-23","day":"Fri","week":"Week 9","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-26","day":"Mon","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-28","day":"Wed","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-30","day":"Fri","week":"Week 10","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-02","day":"Mon","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-04","day":"Wed","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-06","day":"Fri","week":"Week 11","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-09","day":"Mon","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-11","day":"Wed","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-13","day":"Fri","week":"Week 12","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-16","day":"Mon","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-18","day":"Wed","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-20","day":"Fri","week":"Week 13","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-23","day":"Mon","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-25","day":"Wed","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-27","day":"Fri","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Thanksgiving closure \u2014 no class"},{"date":"2026-11-30","day":"Mon","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-02","day":"Wed","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-04","day":"Fri","week":"Week 15","slotType":"Monday schedule","standaloneRequired":false,"assignable":true,"note":"Friday follows a Monday class schedule"}]};
 
   var COLOR_FAMILIES = ["Blue", "Purple", "Green", "Gold", "Lavender", "Teal", "Gray", "Rose", "Orange"];
   var HUES = { Blue: 215, Purple: 265, Green: 145, Gold: 42, Lavender: 285, Teal: 178, Gray: 213, Rose: 345, Orange: 28 };
 
   var PEOPLE = ["Agnes", "Kate", "Jonathan", "Speaker"];
   var ABSENCE_PEOPLE = ["Agnes", "Kate", "Jonathan"];
+  var FORMATS = ["Lecture", "Workshop", "Seminar", "Presentation", "Project studio"];
 
   var STORAGE_KEY = "aimath-lecture-planner-v1";
 
@@ -1047,6 +1074,9 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     s.lectures.forEach(function (l) {
       if (l.prepNotes === undefined) l.prepNotes = "";
       if (l.presenter === undefined) l.presenter = null;
+    });
+    s.themes.forEach(function (t) {
+      if (!t.tagPrefix) t.tagPrefix = (t.name || "T").trim().charAt(0).toUpperCase() || "T";
     });
     return s;
   }
@@ -1210,6 +1240,27 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     return null;
   }
 
+  /* ============================== TAGS (derived, not stored) ==============================
+     Each lecture's displayed tag is its theme's prefix + a number based on
+     where it currently falls in calendar order within that theme — so it
+     stays meaningful automatically as lectures get moved, added, or
+     retitled, instead of the arbitrary spreadsheet IDs (LM1, S06, ...). */
+  var tagMap = {};
+  function refreshTagMap() {
+    var map = {};
+    state.themes.forEach(function (theme) {
+      var lecs = state.lectures.filter(function (l) { return l.themeId === theme.id; });
+      lecs.sort(function (a, b) {
+        var da = a.assignedDate || "9999-99-99";
+        var db = b.assignedDate || "9999-99-99";
+        return da < db ? -1 : da > db ? 1 : 0;
+      });
+      lecs.forEach(function (l, i) { map[l.id] = (theme.tagPrefix || "?") + (i + 1); });
+    });
+    tagMap = map;
+  }
+  function tagFor(lectureId) { return tagMap[lectureId] || "?"; }
+
   function slugify(name) {
     var base = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "theme";
     var id = base, n = 2;
@@ -1285,7 +1336,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     var ariaExtra = (lecture.standalone ? ", standalone" : "") + (lecture.presenter ? ", presenter " + lecture.presenter : "");
     return (
       '<div class="lecture-card' + grayClass + sel + '" style="--h:' + hue + '" draggable="true" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-label="' + attr(lecture.title) + attr(ariaExtra) + '">' +
-        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(lecture.id) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
+        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "(untitled)") + "</div>" +
         statusPill +
       "</div>"
@@ -1314,6 +1365,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   var WEEK_ROWS = buildWeekRows();
 
   function renderCalendar() {
+    refreshTagMap();
     var el = document.getElementById("calendarScroll");
     var html = "";
     WEEK_ROWS.forEach(function (row) {
@@ -1366,6 +1418,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
 
   /* ============================== RENDER: Bank ============================== */
   function renderBank() {
+    refreshTagMap();
     var el = document.getElementById("bankBody");
     var unassigned = state.lectures.filter(function (l) { return !l.assignedDate; });
     if (unassigned.length === 0) {
@@ -1382,6 +1435,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   var collapsedThemes = {};
 
   function renderSpines() {
+    refreshTagMap();
     var el = document.getElementById("spinesBody");
     var html = "";
     state.themes.forEach(function (theme) {
@@ -1392,6 +1446,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       html += '<div class="theme-group-head" data-role="toggle">';
       html += '<span class="chevron">▾</span><span class="theme-swatch' + (theme.colorFamily === "Gray" ? " theme-swatch-gray" : "") + '"></span>';
       html += '<input class="theme-name" data-role="theme-name" data-theme-id="' + attr(theme.id) + '" value="' + attr(theme.name) + '" aria-label="Theme name" />';
+      html += '<input class="theme-tag-input" data-role="theme-tag-prefix" data-theme-id="' + attr(theme.id) + '" value="' + attr(theme.tagPrefix || "") + '" maxlength="3" title="Tag prefix used to number this theme’s lectures (e.g. ' + attr(theme.tagPrefix || "T") + '1, ' + attr(theme.tagPrefix || "T") + '2…)" aria-label="Tag prefix" />';
       html += '<span class="count">' + lectures.length + "</span>";
       html += '<button class="icon-btn" data-role="delete-theme" data-theme-id="' + attr(theme.id) + '" title="Delete theme" aria-label="Delete theme">✕</button>';
       html += "</div>";
@@ -1412,9 +1467,18 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var active = l.presenter === p;
       return '<button type="button" class="presenter-btn' + (active ? " active" : "") + '" data-role="set-presenter" data-lecture-id="' + attr(l.id) + '" data-person="' + attr(p) + '" aria-pressed="' + active + '">' + escapeHtml(p) + "</button>";
     }).join("");
+    var formatOpts = FORMATS.map(function (f) {
+      return '<option value="' + attr(f) + '"' + (l.format === f ? " selected" : "") + ">" + escapeHtml(f) + "</option>";
+    }).join("");
+    if (l.format && FORMATS.indexOf(l.format) === -1) {
+      formatOpts += '<option value="' + attr(l.format) + '" selected>' + escapeHtml(l.format) + "</option>";
+    }
+    var themeOpts = state.themes.map(function (t) {
+      return '<option value="' + attr(t.id) + '"' + (l.themeId === t.id ? " selected" : "") + ">" + escapeHtml(t.name) + "</option>";
+    }).join("");
     return (
       '<div class="spine-row" data-lecture-id="' + attr(l.id) + '">' +
-        '<div class="spine-row-top"><span class="spine-id mono">' + escapeHtml(l.id) + '</span><span class="spine-date mono">' + escapeHtml(dateLabel) + "</span></div>" +
+        '<div class="spine-row-top"><span class="spine-id mono">' + escapeHtml(tagFor(l.id)) + '</span><span class="spine-date mono">' + escapeHtml(dateLabel) + "</span></div>" +
         '<textarea class="spine-title" data-role="title" data-lecture-id="' + attr(l.id) + '" rows="1" aria-label="Lecture title">' + escapeHtml(l.title) + "</textarea>" +
         '<span class="field-label">Description</span>' +
         '<textarea class="spine-desc" data-role="description" data-lecture-id="' + attr(l.id) + '" rows="1" placeholder="What the lecture covers…" aria-label="Description">' + escapeHtml(l.description || "") + "</textarea>" +
@@ -1422,6 +1486,10 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         '<textarea class="spine-desc" data-role="prepNotes" data-lecture-id="' + attr(l.id) + '" rows="1" placeholder="What needs to be ready beforehand…" aria-label="Prep notes">' + escapeHtml(l.prepNotes || "") + "</textarea>" +
         '<span class="field-label">Presenter</span>' +
         '<div class="presenter-row">' + presenterBtns + "</div>" +
+        '<span class="field-label">Format</span>' +
+        '<select class="spine-select" data-role="format" data-lecture-id="' + attr(l.id) + '" aria-label="Format">' + formatOpts + "</select>" +
+        '<span class="field-label">Theme</span>' +
+        '<select class="spine-select" data-role="move-theme" data-lecture-id="' + attr(l.id) + '" aria-label="Theme">' + themeOpts + "</select>" +
         '<div class="spine-row-bottom">' +
           '<label class="standalone-toggle"><input type="checkbox" data-role="standalone" data-lecture-id="' + attr(l.id) + '" ' + (l.standalone ? "checked" : "") + " /> Standalone</label>" +
           '<div class="row-actions"><button class="icon-btn" data-role="delete-lecture" data-lecture-id="' + attr(l.id) + '" title="Delete lecture" aria-label="Delete lecture">🗑</button></div>' +
@@ -1613,14 +1681,20 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     }
   });
 
-  // Only patch the tiny date label in spines rather than a full re-render,
-  // so we never steal focus from a field the user might be mid-edit in.
+  // Only patch the tiny date/tag labels in spines rather than a full
+  // re-render, so we never steal focus from a field the user might be
+  // mid-edit in. A date move can shift tag numbers for the whole theme
+  // (tags are ordered by calendar position), so both get refreshed here.
   function renderSpinesDatesOnly() {
+    refreshTagMap();
     document.querySelectorAll(".spine-row").forEach(function (row) {
       var id = row.getAttribute("data-lecture-id");
       var l = lectureById(id);
+      if (!l) return;
       var dateEl = row.querySelector(".spine-date");
-      if (l && dateEl) dateEl.textContent = l.assignedDate ? formatDate(l.assignedDate) : "unassigned";
+      if (dateEl) dateEl.textContent = l.assignedDate ? formatDate(l.assignedDate) : "unassigned";
+      var idEl = row.querySelector(".spine-id");
+      if (idEl) idEl.textContent = tagFor(l.id);
     });
   }
 
@@ -1741,7 +1815,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var nameInput = document.getElementById("newThemeName");
       var name = (nameInput.value || "").trim();
       if (!name) { toast("Give the theme a name first.", "error"); nameInput.focus(); return; }
-      var newTheme = { id: slugify(name), name: name, colorFamily: pendingNewThemeColor || "Blue" };
+      var newTheme = { id: slugify(name), name: name, colorFamily: pendingNewThemeColor || "Blue", tagPrefix: name.charAt(0).toUpperCase() };
       snapshotForUndo();
       state.themes.push(newTheme);
       pendingNewThemeColor = null;
@@ -1836,7 +1910,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   // otherwise undo would step back one character at a time.
   document.addEventListener("focusin", function (e) {
     var role = e.target.getAttribute && e.target.getAttribute("data-role");
-    if (role === "title" || role === "description" || role === "prepNotes" || role === "theme-name") {
+    if (role === "title" || role === "description" || role === "prepNotes" || role === "theme-name" || role === "theme-tag-prefix") {
       snapshotForUndo();
     }
   });
@@ -1863,16 +1937,59 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       persist();
       return;
     }
+    if (role === "theme-tag-prefix") {
+      var tp = themeById(e.target.getAttribute("data-theme-id"));
+      if (!tp) return;
+      tp.tagPrefix = e.target.value.toUpperCase();
+      persist();
+      // Patches other rows' tag text without touching this input's focus.
+      renderCalendar();
+      renderBank();
+      renderSpinesDatesOnly();
+      return;
+    }
   });
 
   document.addEventListener("change", function (e) {
-    if (e.target.getAttribute("data-role") === "standalone") {
+    var role = e.target.getAttribute("data-role");
+    if (role === "standalone") {
       var l = lectureById(e.target.getAttribute("data-lecture-id"));
       if (!l) return;
       snapshotForUndo();
       l.standalone = e.target.checked;
       persist();
       renderCalendar();
+      return;
+    }
+    if (role === "format") {
+      var lf = lectureById(e.target.getAttribute("data-lecture-id"));
+      if (!lf) return;
+      snapshotForUndo();
+      lf.format = e.target.value;
+      persist();
+      renderCalendar();
+      renderBank();
+      return;
+    }
+    if (role === "move-theme") {
+      var lm = lectureById(e.target.getAttribute("data-lecture-id"));
+      if (!lm) return;
+      var newThemeId = e.target.value;
+      if (newThemeId === lm.themeId) return;
+      snapshotForUndo();
+      lm.themeId = newThemeId;
+      collapsedThemes[newThemeId] = false; // expand the destination so the move is visible
+      persist();
+      renderAll();
+      var newTheme = themeById(newThemeId);
+      toast("Moved to " + (newTheme ? newTheme.name : "theme") + ".");
+      var row = document.querySelector('.spine-row[data-lecture-id="' + CSS.escape(lm.id) + '"]');
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.classList.remove("flash-highlight");
+        void row.offsetWidth;
+        row.classList.add("flash-highlight");
+      }
       return;
     }
   });
