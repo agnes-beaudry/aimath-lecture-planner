@@ -208,6 +208,34 @@
     flex: 0 0 auto;
   }
 
+  .backup-menu-wrap { position: relative; }
+  .backup-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lift);
+    padding: 4px;
+    min-width: 170px;
+    z-index: 50;
+  }
+  .backup-menu.hidden { display: none; }
+  .backup-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 7px 10px;
+    border: none;
+    background: none;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .backup-menu-item:hover { background: var(--paper-sunken); }
+
   /* ---------- Instructions panel ---------- */
   .instructions-panel {
     flex: 0 0 auto;
@@ -882,9 +910,14 @@
     <button class="btn small" id="instructionsToggleBtn" aria-expanded="false" title="Show/hide how-to instructions">Instructions</button>
     <div class="stat-pills" id="statPills"></div>
     <span class="save-indicator"><span class="save-dot" id="saveDot"></span><span id="saveText">Loading…</span></span>
-    <button class="btn" id="importBtn" title="Load a JSON snapshot — replaces the shared plan for everyone">Import</button>
+    <div class="backup-menu-wrap" id="backupMenuWrap">
+      <button class="btn small" id="backupMenuBtn" aria-haspopup="true" aria-expanded="false" title="Backup &amp; restore">Backup ▾</button>
+      <div class="backup-menu hidden" id="backupMenu" role="menu">
+        <button class="backup-menu-item" id="exportBtn" role="menuitem">Export backup</button>
+        <button class="backup-menu-item" id="importBtn" role="menuitem" title="Replaces the shared plan for everyone">Import backup…</button>
+      </div>
+    </div>
     <input type="file" id="importFile" accept="application/json,.json" class="visually-hidden" />
-    <button class="btn primary" id="exportBtn" title="Save a JSON backup of the current plan">Export</button>
     <button class="btn small" id="undoBtn" title="Undo your last change (⌘Z / Ctrl+Z)" disabled>Undo</button>
   </div>
 </div>
@@ -925,7 +958,7 @@
       <h3>Good to know</h3>
       <ul>
         <li>Changes sync live for everyone within a second or two — no exporting or importing needed.</li>
-        <li><strong>Export</strong> saves an occasional backup; not needed for day-to-day syncing.</li>
+        <li>The <strong>Backup</strong> menu has Export (occasional backup) and Import (disaster recovery — replaces the plan for everyone) — not needed day-to-day.</li>
         <li><strong>Undo</strong> (⌘Z / Ctrl+Z, or the button) steps back through your own last ~20 changes.</li>
       </ul>
     </div>
@@ -1844,8 +1877,24 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     }
   });
 
-  /* ============================== TOP BAR: export / import / reset ============================== */
+  /* ============================== TOP BAR: backup menu, export / import ============================== */
+  var backupMenuBtn = document.getElementById("backupMenuBtn");
+  var backupMenu = document.getElementById("backupMenu");
+  function toggleBackupMenu(forceOpen) {
+    var open = forceOpen !== undefined ? forceOpen : backupMenu.classList.contains("hidden");
+    backupMenu.classList.toggle("hidden", !open);
+    backupMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  backupMenuBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    toggleBackupMenu();
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#backupMenuWrap")) toggleBackupMenu(false);
+  });
+
   document.getElementById("exportBtn").addEventListener("click", async function () {
+    toggleBackupMenu(false);
     var stamp = new Date().toISOString().slice(0, 10);
     var filename = "lecture-planner-" + stamp + ".json";
     var data = JSON.stringify(state, null, 2);
@@ -1869,6 +1918,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   });
 
   document.getElementById("importBtn").addEventListener("click", function () {
+    toggleBackupMenu(false);
     document.getElementById("importFile").click();
   });
 
