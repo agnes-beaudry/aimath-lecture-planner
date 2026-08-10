@@ -885,7 +885,7 @@
     <button class="btn" id="importBtn" title="Load a JSON snapshot — replaces the shared plan for everyone">Import</button>
     <input type="file" id="importFile" accept="application/json,.json" class="visually-hidden" />
     <button class="btn primary" id="exportBtn" title="Save a JSON backup of the current plan">Export</button>
-    <button class="btn danger small" id="resetBtn" title="Restore the original semester plan for everyone">Reset</button>
+    <button class="btn small" id="undoBtn" title="Undo your last change (⌘Z / Ctrl+Z)" disabled>Undo</button>
   </div>
 </div>
 
@@ -926,7 +926,7 @@
       <ul>
         <li>Changes sync live for everyone within a second or two — no exporting or importing needed.</li>
         <li><strong>Export</strong> saves an occasional backup; not needed for day-to-day syncing.</li>
-        <li><strong>Reset</strong> restores the plan for <em>everyone</em> — use carefully.</li>
+        <li><strong>Undo</strong> (⌘Z / Ctrl+Z, or the button) steps back through your own last ~20 changes.</li>
       </ul>
     </div>
   </div>
@@ -1072,6 +1072,38 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     renderBank();
     renderStats();
     if (editingSpines) { renderSpinesDatesOnly(); } else { renderSpines(); }
+    // Someone else just changed the plan — an older local snapshot could no
+    // longer be safely restored without silently discarding their edit, so
+    // clear it. Undo only ever covers changes since the last sync from others.
+    if (undoStack.length) { undoStack = []; updateUndoButton(); }
+  }
+
+  /* ============================== UNDO (local to you only) ==============================
+     Steps back through YOUR OWN recent changes in this browser — not a
+     shared history. Cleared whenever a remote update arrives, so it never
+     silently overwrites a collaborator's more recent edit. */
+  var UNDO_LIMIT = 20;
+  var undoStack = [];
+
+  function snapshotForUndo() {
+    undoStack.push(copy(state));
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    updateUndoButton();
+  }
+
+  function performUndo() {
+    if (!undoStack.length) return;
+    state = normalizeState(undoStack.pop());
+    selectedId = null;
+    persist();
+    renderAll();
+    updateUndoButton();
+    toast("Undid your last change.");
+  }
+
+  function updateUndoButton() {
+    var btn = document.getElementById("undoBtn");
+    if (btn) btn.disabled = undoStack.length === 0;
   }
 
   function initSync() {
@@ -1173,6 +1205,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     var lecture = lectureById(lectureId);
     if (!lecture) return false;
     if (!canMove(lecture, targetDate)) return false;
+    snapshotForUndo();
     var oldDate = lecture.assignedDate;
     var occupant = lectureAtDate(targetDate);
     if (occupant && occupant.id !== lecture.id) occupant.assignedDate = oldDate;
@@ -1184,6 +1217,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   function unassign(lectureId) {
     var lecture = lectureById(lectureId);
     if (!lecture || !lecture.assignedDate) return;
+    snapshotForUndo();
     lecture.assignedDate = null;
     persist();
   }
@@ -1564,6 +1598,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var inUse = state.lectures.some(function (l) { return l.themeId === tId; });
       if (inUse) { toast("Move or delete this theme's lectures first.", "error"); return; }
       if (delTheme.classList.contains("confirming")) {
+        snapshotForUndo();
         state.themes = state.themes.filter(function (t) { return t.id !== tId; });
         persist();
         renderAll();
@@ -1578,6 +1613,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (delLec) {
       var lId = delLec.getAttribute("data-lecture-id");
       if (delLec.classList.contains("confirming")) {
+        snapshotForUndo();
         state.lectures = state.lectures.filter(function (l) { return l.id !== lId; });
         if (selectedId === lId) selectedId = null;
         persist();
@@ -1597,6 +1633,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         prepNotes: "", presenter: null,
         format: "Lecture", standalone: false, assignedDate: null, status: "Draft"
       };
+      snapshotForUndo();
       state.lectures.push(newLecture);
       persist();
       renderAll();
@@ -1611,6 +1648,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var lecForPresenter = lectureById(presenterBtn.getAttribute("data-lecture-id"));
       if (lecForPresenter) {
         var person = presenterBtn.getAttribute("data-person");
+        snapshotForUndo();
         lecForPresenter.presenter = lecForPresenter.presenter === person ? null : person;
         persist();
         var prow = presenterBtn.closest(".presenter-row");
@@ -1630,6 +1668,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (absBtn) {
       var absDate = absBtn.getAttribute("data-date");
       var absPerson = absBtn.getAttribute("data-person");
+      snapshotForUndo();
       if (!state.absences[absDate]) state.absences[absDate] = [];
       var absIdx = state.absences[absDate].indexOf(absPerson);
       if (absIdx === -1) state.absences[absDate].push(absPerson); else state.absences[absDate].splice(absIdx, 1);
@@ -1656,6 +1695,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var name = (nameInput.value || "").trim();
       if (!name) { toast("Give the theme a name first.", "error"); nameInput.focus(); return; }
       var newTheme = { id: slugify(name), name: name, colorFamily: pendingNewThemeColor || "Blue" };
+      snapshotForUndo();
       state.themes.push(newTheme);
       pendingNewThemeColor = null;
       persist();
@@ -1727,6 +1767,12 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   }
 
   document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z") {
+      var ae = document.activeElement;
+      var inTextField = ae && (ae.tagName === "TEXTAREA" || ae.tagName === "INPUT");
+      if (!inTextField) { e.preventDefault(); performUndo(); }
+      return; // inside a text field, let the browser's own text-undo happen
+    }
     if (e.key === "Escape") {
       if (!document.getElementById("confirmModalOverlay").classList.contains("hidden")) { closeConfirmModal(); return; }
       setSelected(null);
@@ -1737,6 +1783,15 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (card) { e.preventDefault(); card.click(); return; }
     var cell = e.target.closest(".cal-cell.assignable:not(.occupied)");
     if (cell) { e.preventDefault(); cell.click(); }
+  });
+
+  // One undo checkpoint per edit session (focus to blur), not per keystroke —
+  // otherwise undo would step back one character at a time.
+  document.addEventListener("focusin", function (e) {
+    var role = e.target.getAttribute && e.target.getAttribute("data-role");
+    if (role === "title" || role === "description" || role === "prepNotes" || role === "theme-name") {
+      snapshotForUndo();
+    }
   });
 
   /* ============================== EDIT HANDLERS (spines) ============================== */
@@ -1767,6 +1822,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (e.target.getAttribute("data-role") === "standalone") {
       var l = lectureById(e.target.getAttribute("data-lecture-id"));
       if (!l) return;
+      snapshotForUndo();
       l.standalone = e.target.checked;
       persist();
       renderCalendar();
@@ -1817,6 +1873,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
           message: '"' + file.name + '" will replace the shared plan for everyone, not just your view.',
           confirmLabel: "Import for everyone",
           onConfirm: function () {
+            snapshotForUndo();
             state = normalizeState(parsed);
             selectedId = null;
             persist();
@@ -1832,7 +1889,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     e.target.value = "";
   });
 
-  /* ============================== CONFIRMATION MODAL (shared by Reset & Import) ============================== */
+  /* ============================== CONFIRMATION MODAL (used by Import) ============================== */
   var pendingConfirmAction = null;
   function openConfirmModal(opts) {
     document.getElementById("confirmModalTitle").textContent = opts.title;
@@ -1855,20 +1912,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (action) action();
   });
 
-  document.getElementById("resetBtn").addEventListener("click", function () {
-    openConfirmModal({
-      title: "Reset the shared plan?",
-      message: "This restores the original semester plan for everyone — all edits, moved lectures, prep notes, presenters, and absences will be lost for the whole group, not just your view.",
-      confirmLabel: "Reset for everyone",
-      onConfirm: function () {
-        state = seedState();
-        selectedId = null;
-        persist();
-        renderAll();
-        toast("Restored the original semester plan.");
-      }
-    });
-  });
+  document.getElementById("undoBtn").addEventListener("click", performUndo);
 
   /* ============================== VIEW SWITCH (narrow screens) ============================== */
   document.getElementById("viewSwitch").addEventListener("click", function (e) {
