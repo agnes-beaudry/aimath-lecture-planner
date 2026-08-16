@@ -1,0 +1,423 @@
+<title>AI for Mathematical Research — Public Schedule</title>
+<style>
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  :root {
+    --paper: #eef1f4;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e4e8ec;
+    --ink: #1b2430;
+    --ink-soft: #57616e;
+    --ink-faint: #838d99;
+    --rule: #d7dde3;
+    --rule-strong: #b9c2cb;
+    --accent-ink: #2c3e54;
+    --locked-bg: repeating-linear-gradient(135deg, #e2e6ea, #e2e6ea 6px, #dadfe4 6px, #dadfe4 12px);
+    --locked-text: #6b7480;
+    --focus-ring: #2c3e54;
+
+    --chip-s: 58%;
+    --chip-l-bg: 90%;
+    --chip-l-border: 66%;
+    --chip-l-text: 27%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1a2027;
+      --paper-raised: #232a33;
+      --paper-sunken: #161b21;
+      --ink: #e8ecef;
+      --ink-soft: #a7b1bc;
+      --ink-faint: #707b87;
+      --rule: #313b45;
+      --rule-strong: #404c58;
+      --accent-ink: #cdd8e5;
+      --locked-bg: repeating-linear-gradient(135deg, #202730, #202730 6px, #1a2027 6px, #1a2027 12px);
+      --locked-text: #7c8794;
+      --focus-ring: #cdd8e5;
+
+      --chip-s: 42%;
+      --chip-l-bg: 23%;
+      --chip-l-border: 40%;
+      --chip-l-text: 87%;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #1a2027;
+    --paper-raised: #232a33;
+    --paper-sunken: #161b21;
+    --ink: #e8ecef;
+    --ink-soft: #a7b1bc;
+    --ink-faint: #707b87;
+    --rule: #313b45;
+    --rule-strong: #404c58;
+    --accent-ink: #cdd8e5;
+    --locked-bg: repeating-linear-gradient(135deg, #202730, #202730 6px, #1a2027 6px, #1a2027 12px);
+    --locked-text: #7c8794;
+    --focus-ring: #cdd8e5;
+
+    --chip-s: 42%;
+    --chip-l-bg: 23%;
+    --chip-l-border: 40%;
+    --chip-l-text: 87%;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .serif { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif; }
+  .mono { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--paper-raised);
+    border-bottom: 1px solid var(--rule);
+    flex: 0 0 auto;
+  }
+  .topbar h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: 0.01em; }
+  .topbar .subtitle { margin: 1px 0 0; font-size: 12px; color: var(--ink-soft); letter-spacing: 0.02em; }
+  .topbar-left { min-width: 0; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .save-indicator {
+    font-size: 11px;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #838d99; flex: 0 0 auto; }
+
+  .calendar-toolbar {
+    padding: 12px 20px 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex: 0 0 auto;
+  }
+  .calendar-toolbar h2 { margin: 0; font-size: 14.5px; font-weight: 600; }
+  .calendar-toolbar .hint { font-size: 11px; color: var(--ink-faint); }
+
+  .day-header-row {
+    display: grid;
+    grid-template-columns: 74px repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 20px 6px;
+    flex: 0 0 auto;
+  }
+  .day-header-row span {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    text-align: center;
+  }
+  .day-header-row span:first-child { text-align: left; }
+
+  .calendar-scroll { flex: 1 1 auto; overflow-y: auto; padding: 0 20px 12px; }
+
+  .week-row {
+    display: grid;
+    grid-template-columns: 74px repeat(3, 1fr);
+    gap: 8px;
+    padding: 6px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .week-row:first-child { border-top: none; }
+  .week-label { display: flex; align-items: center; font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+
+  .cal-cell {
+    min-height: 92px;
+    border-radius: 8px;
+    border: 1px solid var(--rule);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+  }
+  .cal-cell.empty-col { visibility: hidden; }
+  .cal-cell .cell-date { font-size: 10px; color: var(--ink-faint); flex: 0 0 auto; }
+  .cal-cell .cell-content { flex: 1 1 auto; display: flex; min-height: 0; }
+
+  .cal-cell.locked {
+    background: var(--locked-bg);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .cal-cell.locked .lock-note { font-size: 10.5px; color: var(--locked-text); line-height: 1.35; }
+
+  .cal-cell.assignable:not(.occupied) { border-style: dashed; }
+  .cal-cell.assignable:not(.occupied) .cell-content {
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 10.5px;
+  }
+  .cal-cell.assignable:not(.occupied) .cell-date { position: absolute; top: 6px; left: 8px; }
+
+  /* ---------- Lecture card ---------- */
+  .lecture-card {
+    border-radius: 7px;
+    border: 1px solid hsl(var(--h) var(--chip-s) var(--chip-l-border));
+    background: hsl(var(--h) var(--chip-s) var(--chip-l-bg));
+    padding: 6px 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .lecture-card .card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .lecture-card .card-id { font-size: 9.5px; color: hsl(var(--h) var(--chip-s) var(--chip-l-text)); opacity: 0.7; }
+  .lecture-card .card-format {
+    font-size: 8.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
+    opacity: 0.65;
+  }
+  .lecture-card .card-title {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    font-size: 11.5px;
+    line-height: 1.28;
+    color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .lecture-card.gray-lecture { --chip-s: 12%; }
+
+  .legend {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 8px 20px 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: hsl(var(--h) 60% 55%);
+    border: 1px solid hsl(var(--h) 60% 40%);
+    flex: 0 0 auto;
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1 class="serif">AI for Mathematical Research</h1>
+    <p class="subtitle">Fall 2026 · Public Schedule — view only</p>
+  </div>
+  <div class="topbar-right">
+    <span class="save-indicator"><span class="save-dot" id="saveDot"></span><span id="saveText">Loading…</span></span>
+  </div>
+</div>
+
+<div class="calendar-toolbar">
+  <h2>Semester Map</h2>
+  <span class="hint">Updates automatically as sessions are finalized — nothing here can be edited</span>
+</div>
+<div class="day-header-row">
+  <span></span><span>Monday</span><span>Wednesday</span><span>Friday</span>
+</div>
+<div class="calendar-scroll" id="calendarScroll"></div>
+<div class="legend" id="legend"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+(function () {
+  "use strict";
+
+  var SLOTS = [{"date":"2026-08-21","day":"Fri","week":"Week 0","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-24","day":"Mon","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-26","day":"Wed","week":"Week 1","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-08-28","day":"Fri","week":"Week 1","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-08-31","day":"Mon","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-02","day":"Wed","week":"Week 2","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-04","day":"Fri","week":"Week 2","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-07","day":"Mon","week":"Week 3","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Labor Day \u2014 no class"},{"date":"2026-09-09","day":"Wed","week":"Week 3","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-11","day":"Fri","week":"Week 3","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-14","day":"Mon","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-16","day":"Wed","week":"Week 4","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-18","day":"Fri","week":"Week 4","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-21","day":"Mon","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-23","day":"Wed","week":"Week 5","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-25","day":"Fri","week":"Week 5","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-09-28","day":"Mon","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-09-30","day":"Wed","week":"Week 6","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-02","day":"Fri","week":"Week 6","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-05","day":"Mon","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-07","day":"Wed","week":"Week 7","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-09","day":"Fri","week":"Week 7","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-12","day":"Mon","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-14","day":"Wed","week":"Week 8","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-16","day":"Fri","week":"Week 8","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-19","day":"Mon","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-21","day":"Wed","week":"Week 9","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-23","day":"Fri","week":"Week 9","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-10-26","day":"Mon","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-28","day":"Wed","week":"Week 10","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-10-30","day":"Fri","week":"Week 10","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-02","day":"Mon","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-04","day":"Wed","week":"Week 11","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-06","day":"Fri","week":"Week 11","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-09","day":"Mon","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-11","day":"Wed","week":"Week 12","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-13","day":"Fri","week":"Week 12","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-16","day":"Mon","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-18","day":"Wed","week":"Week 13","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-11-20","day":"Fri","week":"Week 13","slotType":"Friday seminar","standaloneRequired":true,"assignable":true,"note":"Standalone: cannot depend on Monday/Wednesday material."},{"date":"2026-11-23","day":"Mon","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-25","day":"Wed","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Fall Break \u2014 no class"},{"date":"2026-11-27","day":"Fri","week":"Fall Break","slotType":"No class","standaloneRequired":false,"assignable":false,"note":"Thanksgiving closure \u2014 no class"},{"date":"2026-11-30","day":"Mon","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-02","day":"Wed","week":"Week 15","slotType":"Regular class","standaloneRequired":false,"assignable":true,"note":null},{"date":"2026-12-04","day":"Fri","week":"Week 15","slotType":"Monday schedule","standaloneRequired":false,"assignable":true,"note":"Friday follows a Monday class schedule"}];
+
+  var HUES = { Blue: 215, Purple: 265, Green: 145, Gold: 42, Lavender: 285, Teal: 178, Gray: 213, Rose: 345, Orange: 28 };
+
+  var FIREBASE_CONFIG = {
+    apiKey: "AIzaSyA2sxentex61suEI53NhRzokizJP5fRzSM",
+    authDomain: "aimath-lecture-planner.firebaseapp.com",
+    databaseURL: "https://aimath-lecture-planner-default-rtdb.firebaseio.com",
+    projectId: "aimath-lecture-planner"
+  };
+  var SYNC_PATH = "aimathLecturePlanner";
+
+  var state = { themes: [], lectures: [] };
+  var tagMap = {};
+
+  function refreshTagMap() {
+    var map = {};
+    state.themes.forEach(function (theme) {
+      var lecs = state.lectures.filter(function (l) { return l.themeId === theme.id; });
+      lecs.sort(function (a, b) {
+        var da = a.assignedDate || "9999-99-99";
+        var db = b.assignedDate || "9999-99-99";
+        return da < db ? -1 : da > db ? 1 : 0;
+      });
+      lecs.forEach(function (l, i) { map[l.id] = (theme.tagPrefix || "?") + (i + 1); });
+    });
+    tagMap = map;
+  }
+  function tagFor(id) { return tagMap[id] || "?"; }
+
+  function themeById(id) {
+    for (var i = 0; i < state.themes.length; i++) if (state.themes[i].id === id) return state.themes[i];
+    return null;
+  }
+  // Only a committed lecture ever occupies a public-facing slot — a
+  // scheduled-but-unpublished lecture must render exactly like an empty one.
+  function publishedLectureAtDate(date) {
+    for (var i = 0; i < state.lectures.length; i++) {
+      var l = state.lectures[i];
+      if (l.assignedDate === date && l.committed) return l;
+    }
+    return null;
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function attr(s) { return escapeHtml(s); }
+
+  function formatDate(iso) {
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function cardHtml(lecture) {
+    var theme = themeById(lecture.themeId);
+    var hue = theme ? (HUES[theme.colorFamily] || 210) : 210;
+    var grayClass = theme && theme.colorFamily === "Gray" ? " gray-lecture" : "";
+    return (
+      '<div class="lecture-card' + grayClass + '" style="--h:' + hue + '">' +
+        '<div class="card-top"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
+        '<div class="card-title">' + escapeHtml(lecture.title || "") + "</div>" +
+      "</div>"
+    );
+  }
+
+  function buildWeekRows() {
+    var rows = [];
+    var byWeek = {};
+    var order = [];
+    SLOTS.forEach(function (s) {
+      if (!byWeek[s.week]) { byWeek[s.week] = { label: s.week, Mon: null, Wed: null, Fri: null }; order.push(s.week); }
+      byWeek[s.week][s.day] = s;
+    });
+    order.forEach(function (w) { rows.push(byWeek[w]); });
+    return rows;
+  }
+  var WEEK_ROWS = buildWeekRows();
+
+  function renderCell(slot) {
+    var classes = ["cal-cell"];
+    var inner = "";
+    if (!slot.assignable) {
+      classes.push("locked");
+      inner = '<div class="cell-date mono">' + formatDate(slot.date) + '</div><div class="lock-note">' + escapeHtml(slot.note || "No class") + "</div>";
+    } else {
+      var occupant = publishedLectureAtDate(slot.date);
+      classes.push("assignable");
+      var contentHtml;
+      if (occupant) {
+        classes.push("occupied");
+        contentHtml = cardHtml(occupant);
+      } else {
+        contentHtml = "<span>Schedule TBD</span>";
+      }
+      inner = '<div class="cell-date mono">' + formatDate(slot.date) + '</div><div class="cell-content">' + contentHtml + "</div>";
+    }
+    return '<div class="' + classes.join(" ") + '" title="' + attr(slot.note || "") + '">' + inner + "</div>";
+  }
+
+  function renderCalendar() {
+    refreshTagMap();
+    var el = document.getElementById("calendarScroll");
+    var html = "";
+    WEEK_ROWS.forEach(function (row) {
+      html += '<div class="week-row"><div class="week-label">' + escapeHtml(row.label) + "</div>";
+      ["Mon", "Wed", "Fri"].forEach(function (day) {
+        var slot = row[day];
+        if (!slot) { html += '<div class="cal-cell empty-col"></div>'; return; }
+        html += renderCell(slot);
+      });
+      html += "</div>";
+    });
+    el.innerHTML = html;
+  }
+
+  function renderLegend() {
+    var el = document.getElementById("legend");
+    var html = "";
+    state.themes.forEach(function (t) {
+      var hue = HUES[t.colorFamily] || 210;
+      html += '<span class="legend-item" style="--h:' + hue + '"><span class="legend-swatch"></span>' + escapeHtml(t.name) + "</span>";
+    });
+    el.innerHTML = html;
+  }
+
+  function setSyncStatus(kind, text) {
+    var dot = document.getElementById("saveDot");
+    var label = document.getElementById("saveText");
+    var colors = { synced: "#4a8f5c", connecting: "#c99a2e", error: "#a03d24" };
+    dot.style.background = colors[kind] || "#838d99";
+    label.textContent = text;
+  }
+
+  function applyState(incoming) {
+    state = (incoming && Array.isArray(incoming.themes) && Array.isArray(incoming.lectures)) ? incoming : { themes: [], lectures: [] };
+    renderCalendar();
+    renderLegend();
+  }
+
+  renderCalendar();
+
+  try {
+    var app = initializeApp(FIREBASE_CONFIG);
+    var db = getDatabase(app);
+    var stateRef = ref(db, SYNC_PATH);
+    setSyncStatus("connecting", "Connecting…");
+    onValue(stateRef, function (snapshot) {
+      applyState(snapshot.val());
+      setSyncStatus("synced", "Live");
+    }, function (err) {
+      setSyncStatus("error", "Could not connect (" + err.message + ")");
+    });
+  } catch (err) {
+    setSyncStatus("error", "Could not connect");
+  }
+})();
+</script>

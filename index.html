@@ -503,6 +503,9 @@
     cursor: pointer;
   }
   .standalone-toggle input { margin: 0; }
+  .toggle-group { display: flex; align-items: center; gap: 10px; }
+  .committed-toggle input:checked ~ * { color: #4a8f5c; }
+  .committed-toggle:has(input:checked) { color: #4a8f5c; font-weight: 600; }
 
   .field-label {
     display: block;
@@ -795,6 +798,20 @@
     justify-content: center;
     flex: 0 0 auto;
   }
+  .committed-badge {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #4a8f5c;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .lecture-card.committed { box-shadow: inset 2px 0 0 #4a8f5c; }
   .lecture-card .card-format {
     font-size: 8.5px;
     text-transform: uppercase;
@@ -931,6 +948,7 @@
     <p class="subtitle">Fall 2026 · Lecture Planner</p>
   </div>
   <div class="topbar-right">
+    <a class="btn small" href="schedule.html" target="_blank" rel="noopener" title="Open the read-only public schedule (shows only Published lectures)">Public schedule ↗</a>
     <button class="btn small" id="instructionsToggleBtn" aria-expanded="false" title="Show/hide how-to instructions">Instructions</button>
     <div class="stat-pills" id="statPills"></div>
     <span class="save-indicator"><span class="save-dot" id="saveDot"></span><span id="saveText">Loading…</span></span>
@@ -962,6 +980,7 @@
         <li><strong>Format</strong> (Lecture/Workshop/Seminar/…) and <strong>Theme</strong> (which category it lives in) are both dropdowns on each lecture — changing Theme moves it to a different spine.</li>
         <li>The small box next to a theme's name is its <strong>tag prefix</strong> (e.g. "T"). Each lecture's tag — shown on its card — is that prefix plus a number set automatically by calendar order, so it always stays in sequence.</li>
         <li><strong>+ Add lecture</strong> / 🗑 add or remove lectures; <strong>+ Add theme</strong> creates a new theme with its own color.</li>
+        <li><strong>Published</strong> controls what students see: check it once a lecture is finalized and it appears on the <strong>Public schedule ↗</strong> link (top right) — a read-only view. Unpublished/unassigned lectures never show there.</li>
       </ul>
     </div>
     <div>
@@ -1074,6 +1093,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     s.lectures.forEach(function (l) {
       if (l.prepNotes === undefined) l.prepNotes = "";
       if (l.presenter === undefined) l.presenter = null;
+      if (l.committed === undefined) l.committed = false;
     });
     s.themes.forEach(function (t) {
       if (!t.tagPrefix) t.tagPrefix = (t.name || "T").trim().charAt(0).toUpperCase() || "T";
@@ -1333,10 +1353,12 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     var sel = opts.selected ? " selected" : "";
     var statusPill = opts.showStatus ? '<span class="status-pill">' + escapeHtml(lecture.status || "") + "</span>" : "";
     var presenterBadge = lecture.presenter ? '<span class="presenter-badge" title="' + attr(lecture.presenter) + '">' + escapeHtml(lecture.presenter[0]) + "</span>" : "";
-    var ariaExtra = (lecture.standalone ? ", standalone" : "") + (lecture.presenter ? ", presenter " + lecture.presenter : "");
+    var committedClass = lecture.committed ? " committed" : "";
+    var committedBadge = lecture.committed ? '<span class="committed-badge" title="Published to the public schedule">✓</span>' : "";
+    var ariaExtra = (lecture.standalone ? ", standalone" : "") + (lecture.presenter ? ", presenter " + lecture.presenter : "") + (lecture.committed ? ", published" : "");
     return (
-      '<div class="lecture-card' + grayClass + sel + '" style="--h:' + hue + '" draggable="true" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-label="' + attr(lecture.title) + attr(ariaExtra) + '">' +
-        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
+      '<div class="lecture-card' + grayClass + sel + committedClass + '" style="--h:' + hue + '" draggable="true" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-label="' + attr(lecture.title) + attr(ariaExtra) + '">' +
+        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadge + committedBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "(untitled)") + "</div>" +
         statusPill +
       "</div>"
@@ -1491,7 +1513,10 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         '<span class="field-label">Theme</span>' +
         '<select class="spine-select" data-role="move-theme" data-lecture-id="' + attr(l.id) + '" aria-label="Theme">' + themeOpts + "</select>" +
         '<div class="spine-row-bottom">' +
-          '<label class="standalone-toggle"><input type="checkbox" data-role="standalone" data-lecture-id="' + attr(l.id) + '" ' + (l.standalone ? "checked" : "") + " /> Standalone</label>" +
+          '<div class="toggle-group">' +
+            '<label class="standalone-toggle"><input type="checkbox" data-role="standalone" data-lecture-id="' + attr(l.id) + '" ' + (l.standalone ? "checked" : "") + " /> Standalone</label>" +
+            '<label class="standalone-toggle committed-toggle" title="Show this lecture on the public, read-only schedule"><input type="checkbox" data-role="committed" data-lecture-id="' + attr(l.id) + '" ' + (l.committed ? "checked" : "") + " /> Published</label>" +
+          "</div>" +
           '<div class="row-actions"><button class="icon-btn" data-role="delete-lecture" data-lecture-id="' + attr(l.id) + '" title="Delete lecture" aria-label="Delete lecture">🗑</button></div>' +
         "</div>" +
       "</div>"
@@ -1959,6 +1984,17 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       l.standalone = e.target.checked;
       persist();
       renderCalendar();
+      return;
+    }
+    if (role === "committed") {
+      var lc = lectureById(e.target.getAttribute("data-lecture-id"));
+      if (!lc) return;
+      snapshotForUndo();
+      lc.committed = e.target.checked;
+      persist();
+      renderCalendar();
+      renderBank();
+      toast(lc.committed ? "Published to the public schedule." : "Removed from the public schedule.");
       return;
     }
     if (role === "format") {
