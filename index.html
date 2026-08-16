@@ -976,7 +976,7 @@
         <li>Click a theme's header to expand or collapse it.</li>
         <li>Click into any title or description to edit — saves and syncs automatically.</li>
         <li><strong>Prep notes</strong> is for what needs to be ready beforehand.</li>
-        <li><strong>Presenter</strong> assigns who's teaching it — click a name to assign, click again to unassign.</li>
+        <li><strong>Presenter</strong> assigns who's teaching it — click a name to add them, click multiple names for co-presenters, click an active name again to remove it.</li>
         <li><strong>Format</strong> (Lecture/Workshop/Seminar/…) and <strong>Theme</strong> (which category it lives in) are both dropdowns on each lecture — changing Theme moves it to a different spine.</li>
         <li>The small box next to a theme's name is its <strong>tag prefix</strong> (e.g. "T"). Each lecture's tag — shown on its card — is that prefix plus a number set automatically by calendar order, so it always stays in sequence.</li>
         <li><strong>+ Add lecture</strong> / 🗑 add or remove lectures; <strong>+ Add theme</strong> creates a new theme with its own color.</li>
@@ -1092,7 +1092,10 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (!s.absences || typeof s.absences !== "object") s.absences = {};
     s.lectures.forEach(function (l) {
       if (l.prepNotes === undefined) l.prepNotes = "";
-      if (l.presenter === undefined) l.presenter = null;
+      if (l.presenters === undefined) {
+        l.presenters = l.presenter ? [l.presenter] : [];
+      }
+      delete l.presenter;
       if (l.committed === undefined) l.committed = false;
     });
     s.themes.forEach(function (t) {
@@ -1352,13 +1355,16 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     var grayClass = theme && theme.colorFamily === "Gray" ? " gray-lecture" : "";
     var sel = opts.selected ? " selected" : "";
     var statusPill = opts.showStatus ? '<span class="status-pill">' + escapeHtml(lecture.status || "") + "</span>" : "";
-    var presenterBadge = lecture.presenter ? '<span class="presenter-badge" title="' + attr(lecture.presenter) + '">' + escapeHtml(lecture.presenter[0]) + "</span>" : "";
+    var presenters = lecture.presenters || [];
+    var presenterBadges = presenters.map(function (p) {
+      return '<span class="presenter-badge" title="' + attr(p) + '">' + escapeHtml(p[0]) + "</span>";
+    }).join("");
     var committedClass = lecture.committed ? " committed" : "";
     var committedBadge = lecture.committed ? '<span class="committed-badge" title="Published to the public schedule">✓</span>' : "";
-    var ariaExtra = (lecture.standalone ? ", standalone" : "") + (lecture.presenter ? ", presenter " + lecture.presenter : "") + (lecture.committed ? ", published" : "");
+    var ariaExtra = (lecture.standalone ? ", standalone" : "") + (presenters.length ? ", presenters " + presenters.join(", ") : "") + (lecture.committed ? ", published" : "");
     return (
       '<div class="lecture-card' + grayClass + sel + committedClass + '" style="--h:' + hue + '" draggable="true" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-label="' + attr(lecture.title) + attr(ariaExtra) + '">' +
-        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadge + committedBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
+        '<div class="card-top"><span class="card-id-group"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + "</span>" + presenterBadges + committedBadge + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "(untitled)") + "</div>" +
         statusPill +
       "</div>"
@@ -1486,7 +1492,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   function spineRowHtml(l) {
     var dateLabel = l.assignedDate ? formatDate(l.assignedDate) : "unassigned";
     var presenterBtns = PEOPLE.map(function (p) {
-      var active = l.presenter === p;
+      var active = (l.presenters || []).indexOf(p) !== -1;
       return '<button type="button" class="presenter-btn' + (active ? " active" : "") + '" data-role="set-presenter" data-lecture-id="' + attr(l.id) + '" data-person="' + attr(p) + '" aria-pressed="' + active + '">' + escapeHtml(p) + "</button>";
     }).join("");
     var formatOpts = FORMATS.map(function (f) {
@@ -1776,7 +1782,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var themeIdForNew = addLec.getAttribute("data-theme-id");
       var newLecture = {
         id: uid("NEW"), themeId: themeIdForNew, title: "New lecture", description: "",
-        prepNotes: "", presenter: null,
+        prepNotes: "", presenters: [],
         format: "Lecture", standalone: false, assignedDate: null, status: "Draft"
       };
       snapshotForUndo();
@@ -1788,18 +1794,20 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       return;
     }
 
-    // set presenter — a click on the active person unassigns them (toggle)
+    // set presenter — click a name to add them, click an active name to remove them
     var presenterBtn = e.target.closest('[data-role="set-presenter"]');
     if (presenterBtn) {
       var lecForPresenter = lectureById(presenterBtn.getAttribute("data-lecture-id"));
       if (lecForPresenter) {
         var person = presenterBtn.getAttribute("data-person");
+        if (!lecForPresenter.presenters) lecForPresenter.presenters = [];
+        var idx = lecForPresenter.presenters.indexOf(person);
         snapshotForUndo();
-        lecForPresenter.presenter = lecForPresenter.presenter === person ? null : person;
+        if (idx === -1) { lecForPresenter.presenters.push(person); } else { lecForPresenter.presenters.splice(idx, 1); }
         persist();
         var prow = presenterBtn.closest(".presenter-row");
         if (prow) prow.querySelectorAll(".presenter-btn").forEach(function (b) {
-          var isActive = b.getAttribute("data-person") === lecForPresenter.presenter;
+          var isActive = lecForPresenter.presenters.indexOf(b.getAttribute("data-person")) !== -1;
           b.classList.toggle("active", isActive);
           b.setAttribute("aria-pressed", isActive ? "true" : "false");
         });
