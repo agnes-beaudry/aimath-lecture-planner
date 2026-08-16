@@ -187,6 +187,21 @@
     gap: 3px;
     flex: 1 1 auto;
     min-height: 0;
+    cursor: pointer;
+  }
+  .lecture-card:hover { filter: brightness(0.97); }
+  @media (prefers-color-scheme: dark) {
+    .lecture-card:hover { filter: brightness(1.15); }
+  }
+  .lecture-card.expanded .card-title { -webkit-line-clamp: unset; }
+  .card-desc {
+    font-size: 11px;
+    line-height: 1.4;
+    color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
+    opacity: 0.85;
+    white-space: pre-wrap;
+    padding-top: 3px;
+    border-top: 1px solid hsl(var(--h) var(--chip-s) var(--chip-l-border));
   }
   .lecture-card .card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
   .lecture-card .card-id { font-size: 9.5px; color: hsl(var(--h) var(--chip-s) var(--chip-l-text)); opacity: 0.7; }
@@ -275,6 +290,7 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
 
   var state = { themes: [], lectures: [] };
   var tagMap = {};
+  var expandedId = null;
 
   function refreshTagMap() {
     var map = {};
@@ -321,10 +337,15 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     var theme = themeById(lecture.themeId);
     var hue = theme ? (HUES[theme.colorFamily] || 210) : 210;
     var grayClass = theme && theme.colorFamily === "Gray" ? " gray-lecture" : "";
+    var expanded = lecture.id === expandedId;
+    var descHtml = expanded
+      ? '<div class="card-desc">' + escapeHtml(lecture.description || "No description yet.") + "</div>"
+      : "";
     return (
-      '<div class="lecture-card' + grayClass + '" style="--h:' + hue + '">' +
+      '<div class="lecture-card' + grayClass + (expanded ? " expanded" : "") + '" style="--h:' + hue + '" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-expanded="' + expanded + '" aria-label="' + attr(lecture.title) + ", tap for description" + '">' +
         '<div class="card-top"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "") + "</div>" +
+        descHtml +
       "</div>"
     );
   }
@@ -404,6 +425,22 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
   }
 
   renderCalendar();
+
+  function toggleExpanded(id) {
+    expandedId = expandedId === id ? null : id;
+    renderCalendar();
+  }
+  document.addEventListener("click", function (e) {
+    var card = e.target.closest(".lecture-card");
+    if (card) toggleExpanded(card.getAttribute("data-lecture-id"));
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var card = e.target.closest(".lecture-card");
+    if (!card) return;
+    e.preventDefault();
+    toggleExpanded(card.getAttribute("data-lecture-id"));
+  });
 
   try {
     var app = initializeApp(FIREBASE_CONFIG);
