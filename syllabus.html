@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Math 5810: Math and AI — Syllabus</title>
+<meta name="description" content="Syllabus for Math 5810, Special Topics in Mathematics — Math and AI, at the University of Colorado Boulder.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e5ecf4;
+    --bg-alt:#d6e0ec;
+    --text:#1d2531;
+    --text-muted:#55606f;
+    --accent:#3f5fa8;
+    --accent-hover:#2d4681;
+    --rule:#bfcbdb;
+    --max-width:72rem;
+    --serif:"EB Garamond", Georgia, "Times New Roman", serif;
+    --sans:system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{
+    background:linear-gradient(165deg,#eef3f9 0%,#dce4ef 48%,#e8edf4 100%) fixed;
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:17px;
+    line-height:1.6;
+  }
+  body{flex-direction:column;min-height:100vh;margin:0;display:flex}
+  body>header,body>footer{background:#ffffff59}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-hover);text-decoration:underline}
+  .container{width:100%;max-width:var(--max-width);margin:0 auto;padding:0 1.25rem}
+  main{flex:1;padding-bottom:4rem}
+  header{border-bottom:1px solid var(--rule);background:0 0}
+  .header-inner{flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem 2rem;padding-top:1.25rem;padding-bottom:1rem;display:flex}
+  .site-title{font-family:var(--serif);color:var(--text);white-space:normal;font-size:1.35rem;line-height:1.25}
+  .site-title:hover{color:var(--accent);text-decoration:none}
+  nav .out{color:var(--text-muted);font-size:.95rem}
+  nav .out:hover{color:var(--accent-hover);text-decoration:none}
+  footer{border-top:1px solid var(--rule);color:var(--text-muted);padding:1.5rem 0 2rem;font-size:.9rem}
+  .footer-inner p{margin:.2rem 0}
+  .fine{font-size:.8rem}
+
+  h1,h2,h3,h4{font-family:var(--serif);margin:1.4em 0 .5em;font-weight:500;line-height:1.2}
+  h1{margin-top:.5em;font-size:2.4rem}
+  h1 .topic{color:var(--accent);margin-top:.15em;display:inline-block}
+  h2{font-size:1.7rem}
+  h3{font-size:1.25rem}
+
+  .logistics{font-size:1.1rem;line-height:1.7}
+  .instructors{margin-top:-.6rem;font-size:1.1rem}
+  .instructors ul{margin:.3rem 0 0;padding-left:1.2rem}
+  .instructors li{margin:.15rem 0}
+
+  .course-pages{
+    border:1px solid var(--rule);
+    border-left:4px solid var(--accent);
+    background:#ffffff73;
+    border-radius:10px;
+    margin:1.5rem 0 0;
+    padding:.9rem 1.2rem;
+    list-style:none;
+  }
+  .course-pages li{margin:.25rem 0;font-size:1.05rem}
+
+  .blurb{margin:.3em 0 .6em}
+  .note{color:var(--text-muted)}
+
+  .flag{
+    background:#fff4e0;
+    border-left:4px solid #b8862b;
+    padding:.15rem .6rem;
+    font-size:.92rem;
+    color:#6d5324;
+    display:inline-block;
+    border-radius:4px;
+    margin-top:.3rem;
+  }
+
+  section{margin-top:2rem}
+  .card{
+    border:1px solid var(--rule);
+    background:#ffffff73;
+    border-radius:10px;
+    padding:1rem 1.3rem;
+    margin:.8rem 0;
+  }
+  .card h3{margin-top:0}
+  .card .project{font-size:.95rem;color:var(--text-muted)}
+  .card .project strong{color:var(--text)}
+
+  .themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="container header-inner">
+    <a class="site-title" href="https://katestange.net/ai/course/">Math 5810: Math and AI</a>
+    <nav aria-label="Main"><a class="out" href="https://katestange.net/ai/course/">↖ Course page</a></nav>
+  </div>
+</header>
+
+<main>
+<div class="container">
+
+  <h1>Math 5810: Special Topics in Mathematics<br><span class="topic">Syllabus</span></h1>
+
+  <p class="logistics">
+    Fall 2026 · University of Colorado Boulder<br>
+    Monday, Wednesday, Friday 1:25–2:15 pm<br>
+    <a href="https://katestange.net/ai/course/">Course webpage ↗</a>
+  </p>
+
+  <p class="instructors">Instructors:</p>
+  <ul class="instructors">
+    <li><strong>Agnès Beaudry</strong> — Mathematics 312 · Office Hours: Mondays &amp; Tuesdays, 11:00&nbsp;am–12:00&nbsp;pm</li>
+    <li><strong>Katherine E. Stange</strong> — Mathematics 308</li>
+    <li><strong>Jonathan Wise</strong> — Mathematics 204</li>
+  </ul>
+
+  <ul class="course-pages">
+    <li><a href="https://katestange.net/ai/course/">Course webpage</a> — resources, links, and readings for the semester</li>
+  </ul>
+
+  <section>
+    <h2>Course Plan</h2>
+    <p class="blurb">Four themes — each one ends in something you have actually built.</p>
+
+    <div class="themes">
+      <div class="card">
+        <h3>Theory of LMs</h3>
+        <p>How language models work: tokens, context, transformers, training — and the difference between a <em>model</em> and the larger <em>AI system</em> built around it.</p>
+        <p class="project"><strong>Project:</strong> Build a small language model in Python</p>
+      </div>
+      <div class="card">
+        <h3>AI-assisted research</h3>
+        <p>Using AI tools to actually do mathematics: vibe-coding, vibe-proofing, agents, and harnesses.</p>
+        <p class="project"><strong>Projects:</strong> Vibe-Coding Visualizations; AI-assisted research paper; Class-built harness</p>
+      </div>
+      <div class="card">
+        <h3>Formalization</h3>
+        <p>An introduction to formalization languages — Lean — and to proof assistants and proof verification.</p>
+        <p class="project"><strong>Project:</strong> Formalization of research paper; Add formalization harness</p>
+      </div>
+      <div class="card">
+        <h3>Ethical practices</h3>
+        <p>The issues around AI in mathematical research: data sources, bias, resources, environmental cost, verification, responsibility, disclosure, reproducibility, attribution, consequences for mathematicians.</p>
+        <p class="project"><strong>Project:</strong> Class written guidelines for responsible AI use in research</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Grading</h2>
+    <p class="blurb">Class participation is the full grade. All students who participate will receive an A.</p>
+  </section>
+
+  <section>
+    <h2>Required Syllabus Statements</h2>
+
+    <h3>Honor Code</h3>
+    <p>All students enrolled in a University of Colorado Boulder course are responsible for knowing and adhering to the <a href="https://www.colorado.edu/sccr/students/honor-code-and-student-code-conduct">Honor Code</a>. Violations of the Honor Code may include but are not limited to: plagiarism (including use of paper writing services or technology [such as essay bots]), cheating, fabrication, lying, bribery, threat, unauthorized access to academic materials, clicker fraud, submitting the same or similar work in more than one course without permission from all course instructors involved, and aiding academic dishonesty. Understanding the course's syllabus is a vital part of adhering to the Honor Code.</p>
+    <p>All incidents of academic misconduct will be reported to Student Conduct &amp; Conflict Resolution: <a href="mailto:StudentConduct@colorado.edu">StudentConduct@colorado.edu</a>. Students found responsible for violating the Honor Code will be assigned resolution outcomes from Student Conduct &amp; Conflict Resolution and will be subject to academic sanctions from the faculty member. Visit <a href="https://www.colorado.edu/sccr/students/honor-code-and-student-code-conduct">Honor Code</a> for more information on the academic integrity policy.</p>
+
+    <h3>Accommodation for Disabilities, Temporary Medical Conditions, and Medical Isolation</h3>
+    <p>If you qualify for accommodations because of a disability, please submit your accommodation letter from Disability Services to your faculty member in a timely manner so that your needs can be addressed. Disability Services determines accommodations based on documented disabilities in the academic environment. Information on requesting accommodations is located on the <a href="https://www.colorado.edu/disabilityservices/">Disability Services website</a>. Contact Disability Services at 303-492-8671 or <a href="mailto:DSinfo@colorado.edu">DSinfo@colorado.edu</a> for further assistance. If you have a temporary medical condition, see <a href="https://www.colorado.edu/disabilityservices/students/temporary-medical-conditions">Temporary Medical Conditions</a> on the Disability Services website.</p>
+    <p>If you have a temporary illness, injury or required medical isolation for which you require adjustment, contact us to discuss arrangements and how we can make sure you can stay engaged.</p>
+
+    <h3>Accommodation for Religious Obligations</h3>
+    <p>Instructional faculty members must make every reasonable effort to accommodate all students who have conflicts with scheduled exams, assignment deadlines or required attendance due to a religious observance. Whenever possible, students must notify the instructional faculty member at least two weeks in advance of the expected exam, assignment deadline, or attendance conflict to request an accommodation for religious observance. If the start date of the course is less than two weeks before the date of requested accommodation, students must notify the instructional faculty member on the start date of the course. See the <a href="https://www.colorado.edu/compliance/student-academic-accommodations-religious-observances-policy">Student Academic Accommodations for Religious Observances Policy</a> for more information.</p>
+    <p>In this class, if you need accommodation, contact us and we will make sure we can help you catch up on what you miss.</p>
+
+    <h3>Student Names and Pronouns</h3>
+    <p>CU Boulder recognizes that students' legal information does not always align with how they identify. If you wish to have a name other than your legal name appear on your instructors' class rosters and in Canvas, or if you wish to choose pronouns to appear on your instructors' class rosters and in Canvas, visit the <a href="https://www.colorado.edu/registrar/students/records/info/preferred">Registrar's website</a> for instructions on how to change your personal information in university systems.</p>
+
+    <h3>Classroom Behavior</h3>
+    <p>Students and faculty are responsible for maintaining an appropriate learning environment in all instructional settings, whether in person, remote, or online. Failure to adhere to such behavioral standards may be subject to discipline. Professional courtesy and sensitivity are especially important with respect to individuals and topics dealing with race, color, national origin, sex, pregnancy, age, disability, creed, religion, sexual orientation, gender identity, gender expression, veteran status, marital status, political affiliation, or political philosophy.</p>
+    <p><strong>Additional classroom behavior information</strong></p>
+    <ul>
+      <li><a href="https://www.colorado.edu/compliance/policies/student-classroom-course-related-behavior">Student Classroom and Course-Related Behavior Policy</a></li>
+      <li><a href="https://www.colorado.edu/sccr/students/honor-code-and-student-code-conduct">Student Code of Conduct</a></li>
+      <li><a href="https://www.colorado.edu/oiec/">Office of Institutional Equity and Compliance</a></li>
+    </ul>
+
+    <h3>Sexual Misconduct, Discrimination, Harassment and/or Related Retaliation</h3>
+    <p>CU Boulder is committed to fostering a productive and welcoming learning, working, and living environment. University policy prohibits <a href="https://www.colorado.edu/oiec/policies/protected-class-nondiscrimination-policy/protected-class-definitions">protected-class</a> discrimination and harassment, sexual misconduct (harassment, exploitation, and assault), intimate partner abuse (dating or domestic violence), stalking, and related retaliation by or against members of our community on- or off-campus. Denial of an approved accommodation for disability, religious observance, or pregnancy or pregnancy related medical conditions may be discriminatory.</p>
+    <p>The <a href="https://www.colorado.edu/oiec/">Office of Institutional Equity and Compliance (OIEC)</a> addresses these concerns, and individuals who have been subjected to misconduct can contact OIEC at 303-492-2127 or email <a href="mailto:OIEC@colorado.edu">OIEC@colorado.edu</a>. Information about university policies, <a href="https://www.colorado.edu/oiec/reporting-resolutions/making-report">OIEC reporting options</a>, and <a href="https://www.colorado.edu/oiec/support-resources">OIEC support resources</a> including confidential services can be found on the <a href="https://www.colorado.edu/oiec/">OIEC website</a>.</p>
+    <p>Faculty and graduate instructors are required to inform OIEC when someone discloses misconduct regardless of when or where it occurred. This is to ensure that those impacted receive outreach from OIEC about resolution options and support resources. To learn more about reporting and support options for a variety of concerns, visit the <a href="https://www.colorado.edu/dontignoreit/">Don't Ignore It page</a>.</p>
+
+    <h3>Mental Health and Wellness <span class="note">(recommended, not required)</span></h3>
+    <p>The University of Colorado Boulder is committed to supporting students' mental health and overall wellbeing. If personal, academic, or emotional challenges are affecting your wellbeing or success, <a href="https://www.colorado.edu/counseling/">Counseling and Psychiatric Services (CAPS)</a>, is here to help. CAPS offers counseling, referrals, psychiatric care, crisis support, and much more. Visit CAPS in the C4C, or call (303) 492-2277, 24/7.</p>
+
+    <h3>Acceptable Use of AI in This Class</h3>
+    <p>AI is acceptable for any assignment or project in this class and required for most.</p>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <p>Agnès Beaudry, Katherine E. Stange, and Jonathan Wise · Department of Mathematics, University of Colorado Boulder · <a href="https://katestange.net/ai/course/">course webpage</a></p>
+    <p class="fine">Math 5810, Fall 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
