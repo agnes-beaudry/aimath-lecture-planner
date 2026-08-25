@@ -278,6 +278,36 @@
   .instructions-grid li { margin-bottom: 4px; }
   .instructions-grid strong { color: var(--ink); }
 
+  /* ---------- Office hours ---------- */
+  .office-hours-box {
+    flex: 0 0 auto;
+    background: var(--paper-raised);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 20px 12px;
+  }
+  .office-hours-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .office-hours-head h2 { margin: 0; font-size: 13.5px; font-weight: 600; }
+  .office-hours-head .hint { font-size: 11px; color: var(--ink-faint); }
+  .office-hours-input {
+    width: 100%;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 6px 8px;
+    border-radius: 6px;
+    resize: none;
+    overflow: hidden;
+  }
+  .office-hours-input:focus { border-color: var(--rule-strong); background: var(--paper-sunken); }
+
   /* ---------- Layout shell ---------- */
   .shell {
     flex: 1 1 auto;
@@ -964,6 +994,14 @@
   </div>
 </div>
 
+<div class="office-hours-box">
+  <div class="office-hours-head">
+    <h2>Office Hours</h2>
+    <span class="hint">Shown at the top of the public schedule — edit anytime</span>
+  </div>
+  <textarea class="office-hours-input" id="officeHoursInput" data-role="officeHours" rows="1" placeholder="One line per person, e.g. Agnès Beaudry · Mathematics 312 · office hours Mondays &amp; Tuesdays, 11:00 am–12:00 pm" aria-label="Office hours"></textarea>
+</div>
+
 <div class="instructions-panel hidden" id="instructionsPanel">
   <div class="instructions-panel-head">
     <h2>How this works</h2>
@@ -1090,6 +1128,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   // still load cleanly.
   function normalizeState(s) {
     if (!s.absences || typeof s.absences !== "object") s.absences = {};
+    if (typeof s.officeHours !== "string") s.officeHours = "";
     s.lectures.forEach(function (l) {
       if (l.prepNotes === undefined) l.prepNotes = "";
       if (l.links === undefined) l.links = "";
@@ -1158,6 +1197,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     renderCalendar();
     renderBank();
     renderStats();
+    renderOfficeHours();
     if (editingSpines) { renderSpinesDatesOnly(); } else { renderSpines(); }
     // Someone else just changed the plan — an older local snapshot could no
     // longer be safely restored without silently discarding their edit, so
@@ -1570,11 +1610,19 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     document.getElementById("statPills").innerHTML = html;
   }
 
+  function renderOfficeHours() {
+    var el = document.getElementById("officeHoursInput");
+    if (!el || document.activeElement === el) return; // don't clobber active typing
+    el.value = state.officeHours || "";
+    autoGrow(el);
+  }
+
   function renderAll() {
     renderSpines();
     renderCalendar();
     renderBank();
     renderStats();
+    renderOfficeHours();
   }
 
   /* ============================== TOASTS ============================== */
@@ -1946,7 +1994,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   // otherwise undo would step back one character at a time.
   document.addEventListener("focusin", function (e) {
     var role = e.target.getAttribute && e.target.getAttribute("data-role");
-    if (role === "title" || role === "description" || role === "prepNotes" || role === "links" || role === "theme-name" || role === "theme-tag-prefix") {
+    if (role === "title" || role === "description" || role === "prepNotes" || role === "links" || role === "officeHours" || role === "theme-name" || role === "theme-tag-prefix") {
       snapshotForUndo();
     }
   });
@@ -1954,6 +2002,12 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   /* ============================== EDIT HANDLERS (spines) ============================== */
   document.addEventListener("input", function (e) {
     var role = e.target.getAttribute("data-role");
+    if (role === "officeHours") {
+      state.officeHours = e.target.value;
+      autoGrow(e.target);
+      persist();
+      return;
+    }
     if (role === "title" || role === "description" || role === "prepNotes" || role === "links") {
       var l = lectureById(e.target.getAttribute("data-lecture-id"));
       if (!l) return;

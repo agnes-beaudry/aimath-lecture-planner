@@ -107,6 +107,25 @@
   }
   .save-dot { width: 6px; height: 6px; border-radius: 50%; background: #838d99; flex: 0 0 auto; }
 
+  .office-hours {
+    flex: 0 0 auto;
+    padding: 10px 20px 12px;
+    background: var(--paper-raised);
+    border-bottom: 1px solid var(--rule);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+  }
+  .office-hours.hidden { display: none; }
+  .office-hours-title {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    margin: 0 0 3px;
+  }
+
   .calendar-toolbar {
     padding: 12px 20px 8px;
     display: flex;
@@ -274,6 +293,11 @@
   <div class="topbar-right">
     <span class="save-indicator"><span class="save-dot" id="saveDot"></span><span id="saveText">Loading…</span></span>
   </div>
+</div>
+
+<div class="office-hours hidden" id="officeHours">
+  <p class="office-hours-title">Office Hours</p>
+  <div id="officeHoursText"></div>
 </div>
 
 <div class="calendar-toolbar">
@@ -460,8 +484,16 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     label.textContent = text;
   }
 
+  function renderOfficeHours() {
+    var box = document.getElementById("officeHours");
+    var text = state.officeHours || "";
+    box.classList.toggle("hidden", !text.trim());
+    document.getElementById("officeHoursText").innerHTML = escapeHtml(text);
+  }
+
   function applyState(incoming) {
     state = (incoming && Array.isArray(incoming.themes) && Array.isArray(incoming.lectures)) ? incoming : { themes: [], lectures: [] };
+    renderOfficeHours();
     renderCalendar();
     renderLegend();
   }
