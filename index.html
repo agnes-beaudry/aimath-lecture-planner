@@ -1092,6 +1092,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
     if (!s.absences || typeof s.absences !== "object") s.absences = {};
     s.lectures.forEach(function (l) {
       if (l.prepNotes === undefined) l.prepNotes = "";
+      if (l.links === undefined) l.links = "";
       if (l.presenters === undefined) {
         l.presenters = l.presenter ? [l.presenter] : [];
       }
@@ -1512,6 +1513,8 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
         '<textarea class="spine-desc" data-role="description" data-lecture-id="' + attr(l.id) + '" rows="1" placeholder="What the lecture covers…" aria-label="Description">' + escapeHtml(l.description || "") + "</textarea>" +
         '<span class="field-label">Prep notes</span>' +
         '<textarea class="spine-desc" data-role="prepNotes" data-lecture-id="' + attr(l.id) + '" rows="1" placeholder="What needs to be ready beforehand…" aria-label="Prep notes">' + escapeHtml(l.prepNotes || "") + "</textarea>" +
+        '<span class="field-label">Links</span>' +
+        '<textarea class="spine-desc" data-role="links" data-lecture-id="' + attr(l.id) + '" rows="1" placeholder="One per line: Label | https://…" aria-label="Links">' + escapeHtml(l.links || "") + "</textarea>" +
         '<span class="field-label">Presenter</span>' +
         '<div class="presenter-row">' + presenterBtns + "</div>" +
         '<span class="field-label">Format</span>' +
@@ -1782,7 +1785,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
       var themeIdForNew = addLec.getAttribute("data-theme-id");
       var newLecture = {
         id: uid("NEW"), themeId: themeIdForNew, title: "New lecture", description: "",
-        prepNotes: "", presenters: [],
+        prepNotes: "", links: "", presenters: [],
         format: "Lecture", standalone: false, assignedDate: null, status: "Draft"
       };
       snapshotForUndo();
@@ -1943,7 +1946,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   // otherwise undo would step back one character at a time.
   document.addEventListener("focusin", function (e) {
     var role = e.target.getAttribute && e.target.getAttribute("data-role");
-    if (role === "title" || role === "description" || role === "prepNotes" || role === "theme-name" || role === "theme-tag-prefix") {
+    if (role === "title" || role === "description" || role === "prepNotes" || role === "links" || role === "theme-name" || role === "theme-tag-prefix") {
       snapshotForUndo();
     }
   });
@@ -1951,7 +1954,7 @@ import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebase
   /* ============================== EDIT HANDLERS (spines) ============================== */
   document.addEventListener("input", function (e) {
     var role = e.target.getAttribute("data-role");
-    if (role === "title" || role === "description" || role === "prepNotes") {
+    if (role === "title" || role === "description" || role === "prepNotes" || role === "links") {
       var l = lectureById(e.target.getAttribute("data-lecture-id"));
       if (!l) return;
       l[role] = e.target.value;

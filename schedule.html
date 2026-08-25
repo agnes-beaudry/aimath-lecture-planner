@@ -224,6 +224,29 @@
   }
   .lecture-card.gray-lecture { --chip-s: 12%; }
 
+  .card-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 5px;
+    margin-top: 1px;
+  }
+  .card-link {
+    font-size: 9.5px;
+    line-height: 1.3;
+    color: hsl(var(--h) var(--chip-s) var(--chip-l-text));
+    background: hsl(var(--h) var(--chip-s) var(--chip-l-border) / 0.35);
+    border: 1px solid hsl(var(--h) var(--chip-s) var(--chip-l-border));
+    border-radius: 4px;
+    padding: 1px 5px;
+    text-decoration: none;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-link:hover { text-decoration: underline; }
+  .card-link:before { content: "🔗 "; font-size: 8px; }
+
   .legend {
     flex: 0 0 auto;
     display: flex;
@@ -328,6 +351,27 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
   }
   function attr(s) { return escapeHtml(s); }
 
+  // Links are stored as free text, one per line: "Label | https://…" or a bare URL.
+  function parseLinks(raw) {
+    if (!raw) return [];
+    return String(raw).split("\n").map(function (line) { return line.trim(); }).filter(Boolean).map(function (line) {
+      var idx = line.indexOf("|");
+      var label, url;
+      if (idx !== -1) {
+        label = line.slice(0, idx).trim();
+        url = line.slice(idx + 1).trim();
+      } else {
+        url = line;
+        label = "";
+      }
+      if (!label) {
+        try { label = new URL(url).hostname.replace(/^www\./, ""); }
+        catch (e) { label = "Link"; }
+      }
+      return { label: label, url: url };
+    }).filter(function (l) { return l.url; });
+  }
+
   function formatDate(iso) {
     var d = new Date(iso + "T00:00:00");
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -341,10 +385,17 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     var descHtml = expanded
       ? '<div class="card-desc">' + escapeHtml(lecture.description || "No description yet.") + "</div>"
       : "";
+    var links = parseLinks(lecture.links);
+    var linksHtml = links.length
+      ? '<div class="card-links">' + links.map(function (lk) {
+          return '<a class="card-link" href="' + attr(lk.url) + '" target="_blank" rel="noopener noreferrer" title="' + attr(lk.url) + '">' + escapeHtml(lk.label) + "</a>";
+        }).join("") + "</div>"
+      : "";
     return (
       '<div class="lecture-card' + grayClass + (expanded ? " expanded" : "") + '" style="--h:' + hue + '" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-expanded="' + expanded + '" aria-label="' + attr(lecture.title) + ", tap for description" + '">' +
         '<div class="card-top"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "") + "</div>" +
+        linksHtml +
         descHtml +
       "</div>"
     );
@@ -431,11 +482,13 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     renderCalendar();
   }
   document.addEventListener("click", function (e) {
+    if (e.target.closest(".card-link")) return; // let the link navigate, don't toggle
     var card = e.target.closest(".lecture-card");
     if (card) toggleExpanded(card.getAttribute("data-lecture-id"));
   });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
+    if (e.target.closest(".card-link")) return; // let the link navigate, don't toggle
     var card = e.target.closest(".lecture-card");
     if (!card) return;
     e.preventDefault();
