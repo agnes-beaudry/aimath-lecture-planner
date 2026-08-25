@@ -187,13 +187,7 @@
     gap: 3px;
     flex: 1 1 auto;
     min-height: 0;
-    cursor: pointer;
   }
-  .lecture-card:hover { filter: brightness(0.97); }
-  @media (prefers-color-scheme: dark) {
-    .lecture-card:hover { filter: brightness(1.15); }
-  }
-  .lecture-card.expanded .card-title { -webkit-line-clamp: unset; }
   .card-desc {
     font-size: 11px;
     line-height: 1.4;
@@ -284,7 +278,6 @@
 
 <div class="calendar-toolbar">
   <h2>Semester Map</h2>
-  <span class="hint">Click a lecture to see its description</span>
 </div>
 <div class="day-header-row">
   <span></span><span>Monday</span><span>Wednesday</span><span>Friday</span>
@@ -313,7 +306,6 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
 
   var state = { themes: [], lectures: [] };
   var tagMap = {};
-  var expandedId = null;
 
   function refreshTagMap() {
     var map = {};
@@ -381,9 +373,8 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     var theme = themeById(lecture.themeId);
     var hue = theme ? (HUES[theme.colorFamily] || 210) : 210;
     var grayClass = theme && theme.colorFamily === "Gray" ? " gray-lecture" : "";
-    var expanded = lecture.id === expandedId;
-    var descHtml = expanded
-      ? '<div class="card-desc">' + escapeHtml(lecture.description || "No description yet.") + "</div>"
+    var descHtml = lecture.description
+      ? '<div class="card-desc">' + escapeHtml(lecture.description) + "</div>"
       : "";
     var links = parseLinks(lecture.links);
     var linksHtml = links.length
@@ -392,7 +383,7 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
         }).join("") + "</div>"
       : "";
     return (
-      '<div class="lecture-card' + grayClass + (expanded ? " expanded" : "") + '" style="--h:' + hue + '" data-lecture-id="' + attr(lecture.id) + '" tabindex="0" role="button" aria-expanded="' + expanded + '" aria-label="' + attr(lecture.title) + ", tap for description" + '">' +
+      '<div class="lecture-card' + grayClass + '" style="--h:' + hue + '" data-lecture-id="' + attr(lecture.id) + '" aria-label="' + attr(lecture.title) + '">' +
         '<div class="card-top"><span class="card-id mono">' + escapeHtml(tagFor(lecture.id)) + (lecture.standalone ? " ★" : "") + '</span><span class="card-format">' + escapeHtml(lecture.format || "") + "</span></div>" +
         '<div class="card-title">' + escapeHtml(lecture.title || "") + "</div>" +
         linksHtml +
@@ -476,24 +467,6 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
   }
 
   renderCalendar();
-
-  function toggleExpanded(id) {
-    expandedId = expandedId === id ? null : id;
-    renderCalendar();
-  }
-  document.addEventListener("click", function (e) {
-    if (e.target.closest(".card-link")) return; // let the link navigate, don't toggle
-    var card = e.target.closest(".lecture-card");
-    if (card) toggleExpanded(card.getAttribute("data-lecture-id"));
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    if (e.target.closest(".card-link")) return; // let the link navigate, don't toggle
-    var card = e.target.closest(".lecture-card");
-    if (!card) return;
-    e.preventDefault();
-    toggleExpanded(card.getAttribute("data-lecture-id"));
-  });
 
   try {
     var app = initializeApp(FIREBASE_CONFIG);
