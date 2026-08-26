@@ -123,23 +123,36 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
+    width: calc(100% + 12px);
     background: none;
     border: none;
-    padding: 0;
-    margin: 0 0 3px;
+    padding: 7px 6px;
+    margin: -7px -6px 2px;
     font: inherit;
     color: inherit;
     cursor: pointer;
+    border-radius: 6px;
   }
+  .office-hours-toggle:hover { background: var(--paper-sunken); }
   .office-hours-title {
-    font-size: 10.5px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--ink-faint);
   }
+  .office-hours-toggle-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+  .office-hours-toggle-label {
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
   .office-hours-chevron {
-    font-size: 9px;
+    font-size: 15px;
+    line-height: 1;
     color: var(--ink-faint);
     transition: transform 0.15s ease;
     flex: 0 0 auto;
@@ -344,7 +357,10 @@
 <div class="office-hours hidden" id="officeHours">
   <button class="office-hours-toggle" id="officeHoursToggle" type="button" aria-expanded="true" aria-controls="officeHoursText">
     <span class="office-hours-title">Office Hours</span>
-    <span class="office-hours-chevron" aria-hidden="true">▾</span>
+    <span class="office-hours-toggle-right">
+      <span class="office-hours-toggle-label" id="officeHoursToggleLabel">Hide</span>
+      <span class="office-hours-chevron" aria-hidden="true">▾</span>
+    </span>
   </button>
   <div id="officeHoursText"></div>
 </div>
@@ -537,11 +553,15 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
 
   var OH_COLLAPSE_KEY = "officeHoursCollapsed";
   function isOfficeHoursCollapsed() {
-    try { return localStorage.getItem(OH_COLLAPSE_KEY) === "1"; } catch (e) { return false; }
+    try {
+      var v = localStorage.getItem(OH_COLLAPSE_KEY);
+      return v === null ? true : v === "1"; // collapsed by default until the viewer opts to expand
+    } catch (e) { return true; }
   }
   function setOfficeHoursCollapsed(collapsed) {
     document.getElementById("officeHours").classList.toggle("collapsed", collapsed);
     document.getElementById("officeHoursToggle").setAttribute("aria-expanded", collapsed ? "false" : "true");
+    document.getElementById("officeHoursToggleLabel").textContent = collapsed ? "Show" : "Hide";
     try { localStorage.setItem(OH_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch (e) {}
   }
   document.getElementById("officeHoursToggle").addEventListener("click", function () {
