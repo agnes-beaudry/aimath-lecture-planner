@@ -119,13 +119,33 @@
     white-space: pre-wrap;
   }
   .office-hours.hidden { display: none; }
+  .office-hours-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 0 3px;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
   .office-hours-title {
     font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--ink-faint);
-    margin: 0 0 3px;
   }
+  .office-hours-chevron {
+    font-size: 9px;
+    color: var(--ink-faint);
+    transition: transform 0.15s ease;
+    flex: 0 0 auto;
+  }
+  .office-hours.collapsed .office-hours-chevron { transform: rotate(-90deg); }
+  .office-hours.collapsed #officeHoursText { display: none; }
 
   .calendar-toolbar {
     padding: 12px 20px 8px;
@@ -322,7 +342,10 @@
 </div>
 
 <div class="office-hours hidden" id="officeHours">
-  <p class="office-hours-title">Office Hours</p>
+  <button class="office-hours-toggle" id="officeHoursToggle" type="button" aria-expanded="true" aria-controls="officeHoursText">
+    <span class="office-hours-title">Office Hours</span>
+    <span class="office-hours-chevron" aria-hidden="true">▾</span>
+  </button>
   <div id="officeHoursText"></div>
 </div>
 
@@ -511,6 +534,20 @@ import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12
     dot.style.background = colors[kind] || "#838d99";
     label.textContent = text;
   }
+
+  var OH_COLLAPSE_KEY = "officeHoursCollapsed";
+  function isOfficeHoursCollapsed() {
+    try { return localStorage.getItem(OH_COLLAPSE_KEY) === "1"; } catch (e) { return false; }
+  }
+  function setOfficeHoursCollapsed(collapsed) {
+    document.getElementById("officeHours").classList.toggle("collapsed", collapsed);
+    document.getElementById("officeHoursToggle").setAttribute("aria-expanded", collapsed ? "false" : "true");
+    try { localStorage.setItem(OH_COLLAPSE_KEY, collapsed ? "1" : "0"); } catch (e) {}
+  }
+  document.getElementById("officeHoursToggle").addEventListener("click", function () {
+    setOfficeHoursCollapsed(!document.getElementById("officeHours").classList.contains("collapsed"));
+  });
+  setOfficeHoursCollapsed(isOfficeHoursCollapsed());
 
   function renderOfficeHours() {
     var box = document.getElementById("officeHours");
